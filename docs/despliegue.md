@@ -38,6 +38,12 @@ docker compose up -d --build --wait
 
 Usuarios de prueba: `admin` / `Admin123*` (ADMIN) y `operario` / `Operario123*` (USUARIO).
 
+> **Regla de las migraciones.** Un archivo `V<n>__*.sql` que ya se aplicó en alguna base **no se
+> vuelve a editar**, ni siquiera los comentarios: Flyway guarda una huella de cada migración y el
+> back-end se niega a arrancar si cambia ("Migrations have failed validation"). Cualquier cambio
+> del esquema o de los datos va en una migración nueva (`V3__...sql`, `V4__...sql`). En local, si
+> se necesita empezar de cero: `docker compose down -v` (borra la base de desarrollo).
+
 **Base de datos.** El contenedor de PostgreSQL ejecuta `db/init/01_crear_esquema_y_permisos.sql`
 la primera vez. Después, el back-end aplica con Flyway `V1__crear_esquema.sql` (tablas, índices y
 restricciones) y `V2__datos_iniciales.sql` (productos de ejemplo). Para un PostgreSQL instalado
