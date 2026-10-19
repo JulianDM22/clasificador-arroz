@@ -36,8 +36,13 @@ async function salir() {
 
 describe('Selenium · flujo principal', () => {
   before(async () => {
-    const opciones = new chrome.Options().addArguments('--headless=new', '--window-size=1280,900', '--lang=es-CO');
+    const idiomaNavegador = process.env.CHROME_LANG || 'es-CO';
+    const opciones = new chrome.Options().addArguments('--headless=new', '--window-size=1280,900', `--lang=${idiomaNavegador}`);
     driver = await new Builder().forBrowser('chrome').setChromeOptions(opciones).build();
+    // En Linux, Chrome ignora --lang: se fija el idioma de la aplicación (español) para que las
+    // pruebas no dependan del idioma del sistema donde corren.
+    await driver.get(`${URL}/login`);
+    await driver.executeScript("localStorage.setItem('clasificador.idioma', 'es')");
   });
 
   after(async () => {

@@ -99,7 +99,15 @@ jobs:
         run: npx playwright test
       - name: Pruebas de sistema con Selenium
         working-directory: frontend
-        run: node --test pruebas-selenium/
+        run: |
+          set -o pipefail
+          node --test pruebas-selenium/ 2>&1 | tee selenium.log
+      - name: Publicar las fallas de Selenium como anotaciones
+        if: failure()
+        working-directory: frontend
+        run: |
+          [ -f selenium.log ] && grep -E "not ok|actual:|expected:|name: '|message:" selenium.log | head -20 \
+            | sed 's/^ */::error title=Selenium::/' || true
       - name: Prueba de carga con k6 (CA-09.1)
         run: >
           docker run --rm --network ia_arroz_default -e BASE_URL=http://backend:8080
@@ -164,12 +172,23 @@ jobs:
               '- [ ] Volver a ejecutar el pipeline y confirmar que pasa', '',
               `Notificación: ${integrantes.map((u) => '@' + u).join(' ')}`,
             ].join('\n');
+            // Solo se asigna a quien GitHub permite (colaboradores que aceptaron la invitación);
+            // a todos se les menciona en el cuerpo, y la mención también envía la notificación.
+            const asignables = [];
+            for (const u of integrantes) {
+              try {
+                await github.rest.issues.checkUserCanBeAssigned({ ...context.repo, assignee: u });
+                asignables.push(u);
+              } catch {
+                core.warning(`@${u} no se puede asignar (¿aceptó la invitación de colaborador?); solo se le menciona.`);
+              }
+            }
             const abiertos = await github.rest.issues.listForRepo({ ...context.repo, state: 'open', labels: 'ci-fallido' });
             const existente = abiertos.data.find((i) => i.title === titulo);
             if (existente) {
               await github.rest.issues.createComment({ ...context.repo, issue_number: existente.number, body: cuerpo });
               core.notice(`Comentario agregado al issue #${existente.number}`);
             } else {
-              const nuevo = await github.rest.issues.create({ ...context.repo, title: titulo, body: cuerpo, labels: ['ci-fallido', 'bug'], assignees: integrantes });
+              const nuevo = await github.rest.issues.create({ ...context.repo, title: titulo, body: cuerpo, labels: ['ci-fallido', 'bug'], assignees: asignables });
               core.notice(`Issue creado: #${nuevo.data.number}`);
             }
