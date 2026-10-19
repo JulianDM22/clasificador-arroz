@@ -1,0 +1,14 @@
+# Nombre: requirements.txt
+# Descripción: Dependencias de ejecución del servicio de inferencia (sin TensorFlow completo:
+#              el modelo corre con LiteRT para caber en ~512 MB de memoria).
+# Fecha de creación: 2026-10-18
+# Última actualización: 2026-10-18
+# Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
+# Versión: 1.0.0
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+python-multipart==0.0.20
+pillow==11.2.1
+numpy==2.2.5
+prometheus-client==0.21.1
+ai-edge-litert==1.4.0; platform_system == "Linux"

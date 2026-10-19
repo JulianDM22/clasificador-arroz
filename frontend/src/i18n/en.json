@@ -1,0 +1,110 @@
+{
+  "app": { "titulo": "Rice Classifier", "saltar": "Skip to main content" },
+  "menu": {
+    "productos": "Products",
+    "cerrarSesion": "Sign out",
+    "idioma": "Switch language to Spanish",
+    "temaOscuro": "Switch to dark theme",
+    "temaClaro": "Switch to light theme",
+    "usuario": "Signed in as {{usuario}} ({{rol}})"
+  },
+  "login": {
+    "titulo": "Sign in",
+    "usuario": "Username",
+    "contrasena": "Password",
+    "entrar": "Sign in",
+    "ayuda": "Test users: admin (ADMIN) and operario (USER)."
+  },
+  "productos": {
+    "titulo": "Products",
+    "nuevo": "New product",
+    "buscar": "Search by name",
+    "todas": "All",
+    "todos": "All",
+    "vacio": "No products match the filters.",
+    "editar": "Edit {{nombre}}",
+    "eliminar": "Delete {{nombre}}",
+    "filasPorPagina": "Rows per page",
+    "rango": "{{desde}}–{{hasta}} of {{total}}",
+    "eliminado": "Product deleted",
+    "guardado": "Product saved",
+    "confirmarTitulo": "Delete product?",
+    "confirmarTexto": "“{{nombre}}” will be deleted. This cannot be undone.",
+    "cancelar": "Cancel",
+    "confirmarEliminar": "Delete",
+    "cargando": "Loading products"
+  },
+  "campos": {
+    "id": "Id",
+    "nombre": "Name",
+    "categoria": "Category",
+    "descripcion": "Description",
+    "estado": "Status",
+    "acciones": "Actions"
+  },
+  "categorias": { "ARBORIO": "Arborio", "BASMATI": "Basmati", "IPSALA": "Ipsala", "JASMINE": "Jasmine", "KARACADAG": "Karacadag" },
+  "estados": { "ACTIVO": "Active", "INACTIVO": "Inactive" },
+  "formulario": {
+    "tituloNuevo": "New product",
+    "tituloEditar": "Edit product",
+    "guardar": "Save",
+    "volver": "Back to list",
+    "caracteres": "{{n}} / {{max}} characters"
+  },
+  "clasificador": {
+    "titulo": "Suggest the variety from a photo",
+    "explicacion": "Upload a photo of one grain (JPEG or PNG, up to 5 MB). Classify it with the model you choose or compare the 5 models; the category is filled in with the suggestion and you can change it before saving.",
+    "elegir": "Choose photo",
+    "clasificando": "Classifying…",
+    "resultado": "Suggestion: {{categoria}} ({{confianza}} confidence)",
+    "conModelo": "Model: {{modelo}}, {{ms}} ms.",
+    "aplicada": "The category was filled in with the suggestion.",
+    "aplicadaReferencia": "The category was filled in with the reference model's prediction (highlighted row).",
+    "vistaPrevia": "Preview of the selected photo",
+    "probabilidades": "Probability by variety",
+    "modo": "Classification mode",
+    "modoUno": "One model",
+    "modoComparar": "Compare the 5 models",
+    "modelo": "Model",
+    "modeloReferencia": "Reference model",
+    "ensamble": "Ensemble (weighted vote of the 5)",
+    "votoPonderado": "Weighted vote",
+    "recomendado": "recommended",
+    "comparacionTitulo": "Prediction of each model",
+    "consenso": "All models agree",
+    "sinConsenso": "The models disagree",
+    "metricasTitulo": "Model metrics",
+    "metricasExplicacion": "Results on the project's 11,206 test images (notebook 04). The weight is each model's importance in the ensemble, computed on validation.",
+    "avisoPrueba": "Untrained test models are in use: predictions are not real.",
+    "col": {
+      "modelo": "Model",
+      "tipo": "Type",
+      "prediccion": "Prediction",
+      "confianza": "Confidence",
+      "tiempo": "Time",
+      "exactitud": "Accuracy (test)",
+      "f1": "F1 (test)",
+      "parametros": "Parameters",
+      "tamano": "Size",
+      "peso": "Ensemble weight"
+    }
+  },
+  "validacion": {
+    "nombreObligatorio": "Name is required",
+    "nombreMin": "Name must have at least {{min}} characters",
+    "nombreMax": "Name cannot exceed {{max}} characters",
+    "categoriaObligatoria": "Select a category",
+    "estadoObligatorio": "Select a status",
+    "descripcionMax": "Description cannot exceed {{max}} characters",
+    "usuarioObligatorio": "Username is required",
+    "contrasenaObligatoria": "Password is required",
+    "archivoTipo": "The photo must be JPEG or PNG",
+    "archivoTamano": "The photo cannot exceed 5 MB"
+  },
+  "errores": {
+    "red": "Could not reach the server. Check your connection and try again.",
+    "sesionVencida": "Your session expired. Please sign in again.",
+    "generico": "An unexpected error occurred."
+  },
+  "noEncontrada": { "titulo": "Page not found", "volver": "Go home" }
+}

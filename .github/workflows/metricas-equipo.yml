@@ -1,0 +1,89 @@
+# Nombre: metricas-equipo.yml
+# Descripción: Reporte semanal de desempeño y producción de los integrantes a partir de la
+#              actividad del repositorio (commits, líneas, pull requests, issues cerrados y tiempo
+#              de resolución), más el estado de los errores y tareas abiertos. El reporte queda en
+#              el resumen de la ejecución y como archivo JSON descargable. Ver docs/metricas.md.
+# Fecha de creación: 2026-10-18
+# Última actualización: 2026-10-18
+# Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
+# Versión: 1.0.0
+
+name: Métricas del equipo
+
+on:
+  schedule:
+    - cron: "0 13 * * 1"   # lunes 8:00 a. m. hora de Colombia
+  workflow_dispatch:
+    inputs:
+      dias:
+        description: "Días hacia atrás a evaluar"
+        default: "7"
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  reporte:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        env:
+          DIAS: ${{ github.event.inputs.dias || '7' }}
+        with:
+          script: |
+            const fs = require('fs');
+            const integrantes = ['JulianDM22', 'Camilo1408'];
+            const dias = Number(process.env.DIAS);
+            const desde = new Date(Date.now() - dias * 864e5);
+            const repo = context.repo;
+            const m = Object.fromEntries(integrantes.map((u) => [u, { commits: 0, adiciones: 0, eliminaciones: 0, prAbiertos: 0, prFusionados: 0, issuesCerrados: 0, horasResolucion: [] }]));
+
+            const commits = await github.paginate(github.rest.repos.listCommits, { ...repo, since: desde.toISOString(), per_page: 100 });
+            for (const c of commits) {
+              const autor = c.author?.login;
+              if (!m[autor]) continue;
+              const d = await github.rest.repos.getCommit({ ...repo, ref: c.sha });
+              m[autor].commits += 1;
+              m[autor].adiciones += d.data.stats.additions;
+              m[autor].eliminaciones += d.data.stats.deletions;
+            }
+
+            const prs = await github.paginate(github.rest.pulls.list, { ...repo, state: 'all', per_page: 100 });
+            for (const pr of prs.filter((p) => new Date(p.created_at) >= desde)) {
+              if (m[pr.user.login]) m[pr.user.login].prAbiertos += 1;
+              if (pr.merged_at && m[pr.user.login]) m[pr.user.login].prFusionados += 1;
+            }
+
+            const issues = await github.paginate(github.rest.issues.listForRepo, { ...repo, state: 'all', since: desde.toISOString(), per_page: 100 });
+            const soloIssues = issues.filter((i) => !i.pull_request);
+            for (const i of soloIssues.filter((x) => x.closed_at && new Date(x.closed_at) >= desde)) {
+              for (const a of i.assignees.map((x) => x.login).filter((u) => m[u])) {
+                m[a].issuesCerrados += 1;
+                m[a].horasResolucion.push((new Date(i.closed_at) - new Date(i.created_at)) / 36e5);
+              }
+            }
+            const abiertos = soloIssues.filter((i) => i.state === 'open');
+            const ciAbiertos = abiertos.filter((i) => i.labels.some((l) => l.name === 'ci-fallido'));
+
+            const mediana = (xs) => { if (!xs.length) return null; const s = [...xs].sort((a, b) => a - b); const k = Math.floor(s.length / 2); return s.length % 2 ? s[k] : (s[k - 1] + s[k]) / 2; };
+            const totalCommits = integrantes.reduce((s, u) => s + m[u].commits, 0) || 1;
+            const filas = integrantes.map((u) => {
+              const x = m[u];
+              const med = mediana(x.horasResolucion);
+              return `| @${u} | ${x.commits} | ${Math.round(100 * x.commits / totalCommits)} % | +${x.adiciones} / -${x.eliminaciones} | ${x.prAbiertos} / ${x.prFusionados} | ${x.issuesCerrados} | ${med === null ? '—' : med.toFixed(1) + ' h'} |`;
+            });
+
+            await core.summary
+              .addHeading(`Desempeño del equipo · últimos ${dias} días`)
+              .addRaw('| Integrante | Commits | Participación | Líneas | PR abiertos / fusionados | Issues cerrados | Mediana de resolución |\n|---|---|---|---|---|---|---|\n' + filas.join('\n') + '\n')
+              .addHeading('Errores y tareas', 3)
+              .addRaw(`- Issues abiertos: **${abiertos.length}** (de ellos, fallas de CI sin resolver: **${ciAbiertos.length}**)\n`)
+              .addRaw(abiertos.map((i) => `- #${i.number} ${i.title} → ${i.assignees.map((a) => '@' + a.login).join(', ') || 'sin asignar'}`).join('\n') + '\n')
+              .addRaw('\n_Las cifras de actividad no miden calidad por sí solas: se leen junto con las revisiones de código y los criterios de docs/metricas.md._\n')
+              .write();
+
+            fs.writeFileSync('metricas-equipo.json', JSON.stringify({ desde, dias, integrantes: m, issuesAbiertos: abiertos.length, ciAbiertos: ciAbiertos.length }, null, 2));
+      - uses: actions/upload-artifact@v4
+        with: { name: metricas-equipo, path: metricas-equipo.json }

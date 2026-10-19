@@ -1,0 +1,6 @@
+{
+  "source": { "include": ["src"], "includePattern": "\\.(js|jsx)$", "excludePattern": "(pruebas|\\.test\\.)" },
+  "plugins": ["plugins/markdown"],
+  "tags": { "allowUnknownTags": true },
+  "opts": { "destination": "docs-js", "recurse": true, "encoding": "utf8" }
+}

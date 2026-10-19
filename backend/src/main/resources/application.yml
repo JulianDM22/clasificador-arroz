@@ -1,0 +1,77 @@
+# Nombre: application.yml
+# Descripción: Configuración del back-end. Todos los valores sensibles se leen de variables de
+#              entorno; los valores por defecto solo sirven para desarrollo local.
+# Fecha de creación: 2026-10-17
+# Última actualización: 2026-10-17
+# Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
+# Versión: 1.0.0
+
+spring:
+  application:
+    name: clasificador-arroz
+  datasource:
+    # DB_URL completo, o sus partes por separado (así las entrega Render).
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:arroz}}
+    username: ${DB_USER:arroz}
+    password: ${DB_PASSWORD:arroz_local}
+    hikari:
+      maximum-pool-size: ${DB_POOL:5}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: ${PORT:8080}
+  # Permite leer el resto de un archivo demasiado grande para poder responder 413 en vez de cortar la conexión.
+  tomcat:
+    max-swallow-size: 10MB
+  error:
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-components: always
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+app:
+  jwt:
+    # En producción se define APP_JWT_SECRET con al menos 32 caracteres aleatorios.
+    secreto: ${APP_JWT_SECRET:solo-para-desarrollo-local-cambiar-en-produccion-0123456789}
+    expiracion-minutos: 60
+  cors:
+    origenes: ${APP_CORS_ORIGENES:http://localhost:5173,http://localhost:4173}
+  inferencia:
+    url: ${APP_INFERENCIA_URL:http://localhost:8000}
+    timeout-segundos: ${APP_INFERENCIA_TIMEOUT:60}
+    api-key: ${APP_INFERENCIA_API_KEY:}
+  seguridad:
+    # Contraseñas de prueba para desarrollo local; en producción se definen por variable de entorno.
+    admin-password: ${APP_ADMIN_PASSWORD:Admin123*}
+    usuario-password: ${APP_USUARIO_PASSWORD:Operario123*}

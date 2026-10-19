@@ -1,0 +1,175 @@
+# Nombre: ci-cd.yml
+# Descripción: Integración y despliegue continuos. En cada cambio del repositorio:
+#              1) compila y prueba back-end, servicio de inferencia y front-end;
+#              2) corre mutación, pruebas de sistema (Playwright y Selenium), carga (k6) y
+#                 seguridad (OWASP ZAP) sobre el sistema completo en Docker;
+#              3) si todo pasa en main, despliega a producción (Render);
+#              4) si algo falla, crea un issue con las tareas pendientes, lo asigna a los
+#                 integrantes y los menciona para que GitHub les envíe la notificación.
+# Fecha de creación: 2026-10-18
+# Última actualización: 2026-10-18
+# Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
+# Versión: 1.0.0
+
+name: CI/CD
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Back-end (JUnit, Spring Test, Mockito, Testcontainers)
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: backend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17", cache: maven }
+      - name: Compilar y probar (unitarias, web, integración, seguridad) + cobertura
+        run: mvn -B verify
+      - name: Pruebas de mutación (PIT, mínimo 70 %)
+        run: mvn -B test-compile org.pitest:pitest-maven:mutationCoverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reportes-backend
+          path: |
+            backend/target/surefire-reports
+            backend/target/site/jacoco
+            backend/target/pit-reports
+
+  inferencia:
+    name: Servicio de inferencia (pytest)
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: inferencia } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: inferencia/requirements-dev.txt }
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -q --junitxml=reporte-pytest.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: reportes-inferencia, path: inferencia/reporte-pytest.xml }
+
+  frontend:
+    name: Front-end (Vitest + compilación)
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - run: npm ci
+      - run: npx vitest run --coverage
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: reportes-frontend, path: frontend/coverage }
+
+  sistema:
+    name: Sistema completo (Playwright, Selenium, k6, OWASP ZAP)
+    needs: [backend, inferencia, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Levantar el sistema con Docker Compose
+        run: docker compose up -d --build --wait --wait-timeout 300
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - name: Instalar dependencias y navegador
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Pruebas de sistema con Playwright
+        working-directory: frontend
+        run: npx playwright test
+      - name: Pruebas de sistema con Selenium
+        working-directory: frontend
+        run: node --test pruebas-selenium/
+      - name: Prueba de carga con k6 (CA-09.1)
+        run: >
+          docker run --rm --network ia_arroz_default -e BASE_URL=http://backend:8080
+          -v "$PWD/pruebas/carga:/scripts" grafana/k6:0.57.0 run /scripts/carga.js
+      - name: Escaneo de seguridad OWASP ZAP (línea base)
+        run: >
+          docker run --rm --network ia_arroz_default -v "$PWD:/zap/wrk:rw" -u root
+          ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://frontend:80 -I -r zap-frontend.html
+      - name: Registros de los contenedores si algo falló
+        if: failure()
+        run: docker compose logs --tail 200
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reportes-sistema
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+            zap-frontend.html
+
+  desplegar:
+    name: Desplegar a producción (Render)
+    needs: [sistema]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: produccion
+    steps:
+      - name: Disparar el despliegue de los tres servicios
+        env:
+          HOOK_BACKEND: ${{ secrets.RENDER_HOOK_BACKEND }}
+          HOOK_INFERENCIA: ${{ secrets.RENDER_HOOK_INFERENCIA }}
+          HOOK_FRONTEND: ${{ secrets.RENDER_HOOK_FRONTEND }}
+        run: |
+          if [ -z "$HOOK_BACKEND" ]; then
+            echo "::warning::Faltan los secretos RENDER_HOOK_*: se omite el despliegue (ver docs/despliegue.md)."
+            exit 0
+          fi
+          for hook in "$HOOK_INFERENCIA" "$HOOK_BACKEND" "$HOOK_FRONTEND"; do
+            curl -fsS -X POST "$hook" > /dev/null
+          done
+          echo "Despliegue solicitado para inferencia, back-end y front-end." >> "$GITHUB_STEP_SUMMARY"
+
+  notificar-fallo:
+    name: Crear issue y notificar al equipo
+    needs: [backend, inferencia, frontend, sistema, desplegar]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const integrantes = ['JulianDM22', 'Camilo1408'];
+            const resultados = ${{ toJSON(needs) }};
+            const fallidos = Object.entries(resultados).filter(([, r]) => r.result === 'failure').map(([n]) => n);
+            const rama = context.ref.replace('refs/heads/', '');
+            const titulo = `CI falló en ${rama}`;
+            const enlace = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const tareas = fallidos.map((j) => `- [ ] Revisar y corregir el trabajo \`${j}\``).join('\n');
+            const cuerpo = [
+              `Falló la ejecución [#${context.runNumber}](${enlace}) para el commit ${context.sha.slice(0, 7)} de @${context.actor}.`,
+              '', '**Tareas**', tareas,
+              '- [ ] Volver a ejecutar el pipeline y confirmar que pasa', '',
+              `Notificación: ${integrantes.map((u) => '@' + u).join(' ')}`,
+            ].join('\n');
+            const abiertos = await github.rest.issues.listForRepo({ ...context.repo, state: 'open', labels: 'ci-fallido' });
+            const existente = abiertos.data.find((i) => i.title === titulo);
+            if (existente) {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: existente.number, body: cuerpo });
+              core.notice(`Comentario agregado al issue #${existente.number}`);
+            } else {
+              const nuevo = await github.rest.issues.create({ ...context.repo, title: titulo, body: cuerpo, labels: ['ci-fallido', 'bug'], assignees: integrantes });
+              core.notice(`Issue creado: #${nuevo.data.number}`);
+            }

@@ -1,0 +1,94 @@
+{
+  "uid": "clasificador-arroz",
+  "title": "Clasificador de arroz · operación",
+  "description": "Métricas definidas en docs/metricas.md. Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408). Versión 1.0.0 (2026-10-18).",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "tags": ["arroz", "slo"],
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Disponibilidad (servicios arriba)",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 5 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum(up) / count(up)", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } } }
+    },
+    {
+      "id": 2, "type": "stat", "title": "Peticiones por segundo (API)",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 5 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum(rate(http_server_requests_seconds_count{uri=~\"/api/.*\"}[5m]))", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+    {
+      "id": 3, "type": "stat", "title": "Tasa de errores 5xx (objetivo < 1 %)",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 5 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count[5m])), 1e-9)", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.01 }] } } }
+    },
+    {
+      "id": 4, "type": "stat", "title": "Imágenes clasificadas (total)",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 5 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum(predicciones_total)", "refId": "A" }]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Latencia p95 por endpoint (objetivo < 500 ms)",
+      "gridPos": { "x": 0, "y": 5, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum by (le, uri) (rate(http_server_requests_seconds_bucket{uri=~\"/api/.*\"}[5m])))", "legendFormat": "{{uri}}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Peticiones por código de respuesta",
+      "gridPos": { "x": 12, "y": 5, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum by (status) (rate(http_server_requests_seconds_count{uri=~\"/api/.*\"}[5m]))", "legendFormat": "{{status}}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "Latencia de clasificación p50 / p95 (objetivo < 1 s)",
+      "gridPos": { "x": 0, "y": 13, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "histogram_quantile(0.5, sum by (le) (rate(prediccion_segundos_bucket[5m])))", "legendFormat": "p50", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, sum by (le) (rate(prediccion_segundos_bucket[5m])))", "legendFormat": "p95", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "id": 8, "type": "piechart", "title": "Variedades sugeridas por el modelo",
+      "gridPos": { "x": 12, "y": 13, "w": 6, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum by (categoria) (predicciones_total)", "legendFormat": "{{categoria}}", "refId": "A" }]
+    },
+    {
+      "id": 9, "type": "stat", "title": "Imágenes rechazadas",
+      "gridPos": { "x": 18, "y": 13, "w": 6, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum(imagenes_rechazadas_total)", "refId": "A" }]
+    },
+    {
+      "id": 10, "type": "timeseries", "title": "Memoria heap de la JVM",
+      "gridPos": { "x": 0, "y": 21, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(jvm_memory_used_bytes{area=\"heap\"})", "legendFormat": "usada", "refId": "A" },
+        { "expr": "sum(jvm_memory_max_bytes{area=\"heap\"})", "legendFormat": "máxima", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "id": 11, "type": "timeseries", "title": "Conexiones a la base de datos (HikariCP)",
+      "gridPos": { "x": 12, "y": 21, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(hikaricp_connections_active)", "legendFormat": "activas", "refId": "A" },
+        { "expr": "sum(hikaricp_connections_pending)", "legendFormat": "en espera", "refId": "B" }
+      ]
+    }
+  ]
+}

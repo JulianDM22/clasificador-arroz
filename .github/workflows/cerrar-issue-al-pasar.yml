@@ -1,0 +1,35 @@
+# Nombre: cerrar-issue-al-pasar.yml
+# Descripción: Cuando el pipeline CI/CD vuelve a pasar en una rama, cierra el issue automático
+#              "CI falló en <rama>" con un comentario, para que el tablero de tareas refleje el
+#              estado real.
+# Fecha de creación: 2026-10-18
+# Última actualización: 2026-10-18
+# Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
+# Versión: 1.0.0
+
+name: Cerrar issue de CI resuelto
+
+on:
+  workflow_run:
+    workflows: ["CI/CD"]
+    types: [completed]
+
+permissions:
+  issues: write
+
+jobs:
+  cerrar:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const titulo = `CI falló en ${run.head_branch}`;
+            const abiertos = await github.rest.issues.listForRepo({ ...context.repo, state: 'open', labels: 'ci-fallido' });
+            for (const issue of abiertos.data.filter((i) => i.title === titulo)) {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: issue.number,
+                body: `Resuelto: la ejecución [#${run.run_number}](${run.html_url}) pasó para el commit ${run.head_sha.slice(0, 7)}.` });
+              await github.rest.issues.update({ ...context.repo, issue_number: issue.number, state: 'closed', state_reason: 'completed' });
+            }

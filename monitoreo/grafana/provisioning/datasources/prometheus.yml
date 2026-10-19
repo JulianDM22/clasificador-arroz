@@ -1,0 +1,14 @@
+# Nombre: prometheus.yml (fuente de datos de Grafana)
+# Descripción: Conecta Grafana con Prometheus al arrancar.
+# Fecha de creación: 2026-10-18
+# Última actualización: 2026-10-18
+# Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
+# Versión: 1.0.0
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true

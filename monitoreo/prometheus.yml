@@ -1,0 +1,24 @@
+# Nombre: prometheus.yml
+# Descripción: Recolección de métricas cada 15 s del back-end (Spring Boot Actuator) y del
+#              servicio de inferencia, y carga de las reglas de alerta.
+# Fecha de creación: 2026-10-18
+# Última actualización: 2026-10-18
+# Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
+# Versión: 1.0.0
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alertas.yml
+
+scrape_configs:
+  - job_name: backend
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["backend:8080"]
+
+  - job_name: inferencia
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["inferencia:8000"]

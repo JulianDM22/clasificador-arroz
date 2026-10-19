@@ -1,0 +1,37 @@
+# Nombre: .gitignore
+# Descripción: Archivos que no se suben al repositorio (compilados, dependencias, secretos y
+#              modelos pesados).
+# Fecha de creación: 2026-10-17
+# Última actualización: 2026-10-17
+# Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
+# Versión: 1.0.0
+
+# Java / Maven
+backend/target/
+
+# Node
+node_modules/
+frontend/dist/
+playwright-report/
+test-results/
+frontend/docs-js/
+frontend/coverage/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Secretos
+.env
+*.env.local
+
+# Modelos completos de Keras (472 MB); el .tflite (~47 MB) sí se versiona
+*.keras
+
+# Sistema e IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

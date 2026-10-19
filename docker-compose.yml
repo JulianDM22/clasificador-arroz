@@ -1,0 +1,91 @@
+# Nombre: docker-compose.yml
+# Descripción: Levanta el sistema completo en local o en la integración continua: PostgreSQL,
+#              servicio de inferencia, back-end y front-end. Con el perfil "monitoreo" agrega
+#              Prometheus y Grafana.
+#              Uso: docker compose up -d --build
+#                   docker compose --profile monitoreo up -d
+# Fecha de creación: 2026-10-18
+# Última actualización: 2026-10-18
+# Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
+# Versión: 1.0.0
+
+# Nombre fijo del proyecto: la red se llama "ia_arroz_default" en cualquier carpeta (la usan k6 y ZAP).
+name: ia_arroz
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: arroz
+      POSTGRES_USER: arroz
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-arroz_local}
+    volumes:
+      - datos_db:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arroz -d arroz"]
+      interval: 5s
+      retries: 20
+
+  inferencia:
+    build: ./inferencia
+    environment:
+      INFERENCIA_API_KEY: ${INFERENCIA_API_KEY:-clave-local}
+    ports: ["8000:8000"]
+    deploy:
+      resources:
+        limits: { memory: 512m }
+
+  backend:
+    build: ./backend
+    depends_on:
+      db: { condition: service_healthy }
+      inferencia: { condition: service_started }
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/arroz
+      DB_USER: arroz
+      DB_PASSWORD: ${DB_PASSWORD:-arroz_local}
+      APP_JWT_SECRET: ${APP_JWT_SECRET:-secreto-local-de-docker-compose-0123456789abcdef}
+      APP_CORS_ORIGENES: http://localhost:5173,http://localhost:4173,http://localhost:8081
+      APP_INFERENCIA_URL: http://inferencia:8000
+      APP_INFERENCIA_API_KEY: ${INFERENCIA_API_KEY:-clave-local}
+      APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD:-Admin123*}
+      APP_USUARIO_PASSWORD: ${APP_USUARIO_PASSWORD:-Operario123*}
+    ports: ["8080:8080"]
+    deploy:
+      resources:
+        limits: { memory: 512m }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP"]
+      interval: 10s
+      retries: 30
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8080
+    depends_on: [backend]
+    ports: ["8081:80"]
+
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    profiles: ["monitoreo"]
+    volumes:
+      - ./monitoreo/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoreo/alertas.yml:/etc/prometheus/alertas.yml:ro
+    ports: ["9090:9090"]
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    profiles: ["monitoreo"]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin_local}
+    volumes:
+      - ./monitoreo/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoreo/grafana/tableros:/var/lib/grafana/dashboards:ro
+    ports: ["3000:3000"]
+
+volumes:
+  datos_db:

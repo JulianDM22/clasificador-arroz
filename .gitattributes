@@ -1,0 +1,13 @@
+# Nombre: .gitattributes
+# Descripción: Normaliza los finales de línea (LF en el repositorio, necesario para los scripts y
+#              Dockerfiles que corren en Linux) y marca como binarios los modelos e imágenes.
+# Fecha de creación: 2026-10-19
+# Última actualización: 2026-10-19
+# Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
+# Versión: 1.0.0
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.tflite binary
+*.png binary
+*.jpg binary
+*.zip binary

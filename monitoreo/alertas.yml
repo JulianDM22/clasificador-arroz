@@ -1,0 +1,48 @@
+# Nombre: alertas.yml
+# Descripción: Reglas de alerta derivadas de los objetivos de servicio de docs/metricas.md
+#              (disponibilidad, latencia p95, tasa de error y salud del modelo).
+# Fecha de creación: 2026-10-18
+# Última actualización: 2026-10-18
+# Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
+# Versión: 1.0.0
+groups:
+  - name: clasificador-arroz
+    rules:
+      - alert: ServicioCaido
+        expr: up == 0
+        for: 1m
+        labels: { severidad: critica }
+        annotations:
+          resumen: "{{ $labels.job }} no responde"
+          descripcion: "Prometheus no puede leer las métricas de {{ $labels.job }} desde hace más de 1 minuto."
+
+      - alert: LatenciaAltaApi
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{uri=~"/api/v1/productos.*"}[5m]))) > 0.5
+        for: 5m
+        labels: { severidad: alta }
+        annotations:
+          resumen: "p95 de la API de productos sobre 500 ms"
+          descripcion: "Se incumple el objetivo CA-09.1 durante 5 minutos seguidos."
+
+      - alert: TasaDeErroresAlta
+        expr: >
+          sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+          / clamp_min(sum(rate(http_server_requests_seconds_count[5m])), 1e-9) > 0.01
+        for: 5m
+        labels: { severidad: alta }
+        annotations:
+          resumen: "Más del 1 % de las respuestas son errores 5xx"
+
+      - alert: InferenciaLenta
+        expr: histogram_quantile(0.95, sum by (le) (rate(prediccion_segundos_bucket[5m]))) > 1
+        for: 5m
+        labels: { severidad: media }
+        annotations:
+          resumen: "La clasificación tarda más de 1 s en el p95 (CA-09.3)"
+
+      - alert: MemoriaJvmAlta
+        expr: sum(jvm_memory_used_bytes{area="heap"}) / sum(jvm_memory_max_bytes{area="heap"}) > 0.9
+        for: 10m
+        labels: { severidad: media }
+        annotations:
+          resumen: "El heap de la JVM supera el 90 % durante 10 minutos"

@@ -1,0 +1,13 @@
+# Nombre: tableros.yml
+# Descripción: Indica a Grafana dónde están los tableros que debe cargar al arrancar.
+# Fecha de creación: 2026-10-18
+# Última actualización: 2026-10-18
+# Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
+# Versión: 1.0.0
+apiVersion: 1
+providers:
+  - name: clasificador-arroz
+    folder: Clasificador de arroz
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

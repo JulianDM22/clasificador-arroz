@@ -1,0 +1,90 @@
+# Nombre: render.yaml
+# Descripción: Infraestructura como código para producción en Render (plan gratuito):
+#              base de datos PostgreSQL, servicio de inferencia, back-end y front-end estático.
+#              El despliegue automático está apagado: lo dispara el pipeline de GitHub Actions
+#              solo cuando todas las pruebas pasan (ver docs/despliegue.md).
+# Fecha de creación: 2026-10-18
+# Última actualización: 2026-10-18
+# Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
+# Versión: 1.0.0
+
+databases:
+  - name: arroz-db
+    plan: free
+    databaseName: arroz
+    user: arroz
+
+services:
+  - type: web
+    name: arroz-inferencia
+    runtime: docker
+    plan: free
+    dockerContext: ./inferencia
+    dockerfilePath: ./inferencia/Dockerfile
+    healthCheckPath: /salud
+    autoDeploy: false
+    envVars:
+      - key: INFERENCIA_API_KEY
+        generateValue: true
+
+  - type: web
+    name: arroz-backend
+    runtime: docker
+    plan: free
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /actuator/health
+    autoDeploy: false
+    envVars:
+      - key: DB_HOST
+        fromDatabase: { name: arroz-db, property: host }
+      - key: DB_PORT
+        fromDatabase: { name: arroz-db, property: port }
+      - key: DB_NAME
+        fromDatabase: { name: arroz-db, property: database }
+      - key: DB_USER
+        fromDatabase: { name: arroz-db, property: user }
+      - key: DB_PASSWORD
+        fromDatabase: { name: arroz-db, property: password }
+      - key: APP_JWT_SECRET
+        generateValue: true
+      - key: APP_INFERENCIA_API_KEY
+        fromService: { type: web, name: arroz-inferencia, envVarKey: INFERENCIA_API_KEY }
+      - key: APP_INFERENCIA_URL
+        sync: false   # URL pública del servicio de inferencia, p. ej. https://arroz-inferencia.onrender.com
+      - key: APP_CORS_ORIGENES
+        sync: false   # URL del front-end, p. ej. https://arroz-frontend.onrender.com
+      - key: APP_ADMIN_PASSWORD
+        sync: false
+      - key: APP_USUARIO_PASSWORD
+        sync: false
+      - key: JAVA_OPTS
+        value: "-XX:MaxRAMPercentage=70 -XX:+UseSerialGC -Xss512k"
+
+  - type: web
+    name: arroz-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    autoDeploy: false
+    envVars:
+      - key: VITE_API_URL
+        sync: false   # URL pública del back-end, p. ej. https://arroz-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.onrender.com; frame-ancestors 'none'"
