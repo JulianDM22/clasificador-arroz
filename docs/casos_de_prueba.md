@@ -8,7 +8,7 @@ Versión: 1.0.0
 
 # Casos de prueba
 
-Total: **187** casos (las pruebas parametrizadas cuentan como un caso aunque se ejecuten varias veces).
+Total: **188** casos (las pruebas parametrizadas cuentan como un caso aunque se ejecuten varias veces).
 
 ## Resumen por tipo
 
@@ -19,7 +19,7 @@ Total: **187** casos (las pruebas parametrizadas cuentan como un caso aunque se 
 | Integración y sistema (API + PostgreSQL) | Spring Boot Test + Testcontainers | 12 |
 | Integración (API + inferencia) | Spring Boot Test + Testcontainers | 10 |
 | Seguridad | Spring Security Test + Testcontainers | 13 |
-| Unitaria e integración (inferencia) | pytest + TestClient | 23 |
+| Unitaria e integración (inferencia) | pytest + TestClient | 24 |
 | Unitaria (componentes) | Vitest + Testing Library | 36 |
 | Sistema (navegador) | Playwright + axe-core | 24 |
 | Sistema (navegador) | Selenium WebDriver | 5 |
@@ -194,73 +194,74 @@ Criterios sin prueba automática: ninguno.
 | 115 | test_todos_los_modelos_del_catalogo_cargan | Unitaria e integración (inferencia) | pytest + TestClient | `inferencia/tests/test_modelo_real.py` |
 | 116 | test_cada_modelo_devuelve_probabilidades_validas | Unitaria e integración (inferencia) | pytest + TestClient | `inferencia/tests/test_modelo_real.py` |
 | 117 | test_ca_09_3_cada_modelo_clasifica_en_menos_de_un_segundo | Unitaria e integración (inferencia) | pytest + TestClient | `inferencia/tests/test_modelo_real.py` |
-| 118 | CA-06.6 por defecto usa el modelo recomendado (ResNet50V2) | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
-| 119 | CA-06.6 el selector ofrece los 5 modelos con su exactitud y el ensamble | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
-| 120 | CA-06.6 elegir otro modelo vuelve a clasificar la misma foto con ese modelo | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
-| 121 | CA-06.6 se puede clasificar con el ensamble | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
-| 122 | CA-06.7 comparar muestra la predicción de los 5 modelos, el ensamble y si hay consenso | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
-| 123 | CA-06.7 cambiar de modo vuelve a procesar la foto ya elegida | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
-| 124 | CA-06.7 las métricas de test de los 5 modelos están disponibles | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
-| 125 | avisa cuando los modelos cargados son de prueba | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
-| 126 | si el catálogo no responde, igual se puede clasificar con el modelo por defecto del servidor | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
-| 127 | CA-02.2 un nombre de 2 caracteres muestra el error y no envía | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaFormularioProducto.test.jsx` |
-| 128 | CA-06.5 la foto clasificada precarga la categoría y se envía con el producto | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaFormularioProducto.test.jsx` |
-| 129 | CA-06.2 una foto que no es JPEG/PNG se rechaza sin llamar a la API | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaFormularioProducto.test.jsx` |
-| 130 | CA-06.4 si el servicio de clasificación no está disponible se muestra su mensaje | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaFormularioProducto.test.jsx` |
-| 131 | CA-02.5 el error 409 de la API se muestra al usuario | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaFormularioProducto.test.jsx` |
-| 132 | CA-04.1 en modo edición carga el producto y envía la actualización | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaFormularioProducto.test.jsx` |
-| 133 | CA-01.5 con campos vacíos muestra errores y no llama a la API | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaLogin.test.jsx` |
-| 134 | CA-01.2 muestra el mensaje de la API si las credenciales fallan | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaLogin.test.jsx` |
-| 135 | CA-01.1 con credenciales correctas guarda la sesión y entra | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaLogin.test.jsx` |
-| 136 | CA-07.2 cambiar el idioma traduce la pantalla y se recuerda | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaLogin.test.jsx` |
-| 137 | CA-08.3 el tema elegido se recuerda | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaLogin.test.jsx` |
-| 138 | CA-03.1 muestra los productos que devuelve la API | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
-| 139 | CA-02.6 el texto con etiquetas HTML se muestra literal, sin ejecutarse | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
-| 140 | CA-01.4 el USUARIO no ve el botón de eliminar | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
-| 141 | CA-05.3 el ADMIN debe confirmar antes de eliminar | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
-| 142 | CA-05.3 cancelar no elimina | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
-| 143 | CA-03.2 el filtro de texto consulta la API después de escribir | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
-| 144 | sin resultados muestra un mensaje | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
-| 145 | un error de red se muestra al usuario | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
-| 146 | CA-02.2 nombre de %i caracteres → válido=%s | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
-| 147 | CA-02.2 un nombre solo con espacios no es válido | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
-| 148 | CA-02.3 descripción de %i caracteres → válido=%s | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
-| 149 | CA-02.4 categoría y estado deben ser valores permitidos | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
-| 150 | CA-07.2 los mensajes salen en el idioma activo | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
-| 151 | CA-01.5 usuario y contraseña son obligatorios | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
-| 152 | CA-06.2 acepta JPEG y PNG y rechaza otros tipos | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
-| 153 | CA-06.3 límite de 5 MB: exacto se acepta, un byte más no | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
-| 154 | CA-01.1 el administrador inicia sesión y ve su rol | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/autenticacion.spec.js` |
-| 155 | CA-01.2 una contraseña incorrecta muestra un error genérico | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/autenticacion.spec.js` |
-| 156 | CA-01.3 sin sesión, una página protegida redirige al inicio de sesión | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/autenticacion.spec.js` |
-| 157 | CA-01.5 con campos vacíos no se envía el formulario | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/autenticacion.spec.js` |
-| 158 | cerrar sesión borra la sesión y vuelve al inicio | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/autenticacion.spec.js` |
-| 159 | CA-06.1 / CA-06.5 la foto sugiere la categoría y se guarda con el producto | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/clasificacion.spec.js` |
-| 160 | CA-06.5 el usuario puede cambiar la categoría sugerida | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/clasificacion.spec.js` |
-| 161 | CA-06.6 clasificar con el modelo que elige el usuario | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/clasificacion.spec.js` |
-| 162 | CA-06.7 comparar los 5 modelos y ver sus métricas | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/clasificacion.spec.js` |
-| 163 | CA-06.2 un archivo que no es imagen se rechaza en la interfaz | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/clasificacion.spec.js` |
-| 164 | CA-02.1 / CA-03.2 registrar un producto y encontrarlo con el filtro | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/productos.spec.js` |
-| 165 | CA-02.2 un nombre de 2 caracteres no se puede guardar | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/productos.spec.js` |
-| 166 | CA-02.5 un nombre repetido muestra el conflicto de la API | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/productos.spec.js` |
-| 167 | CA-02.6 un nombre con HTML se muestra como texto y no se ejecuta | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/productos.spec.js` |
-| 168 | CA-04.1 editar un producto cambia sus datos | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/productos.spec.js` |
-| 169 | CA-01.4 el operario no ve la opción de eliminar | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/productos.spec.js` |
-| 170 | CA-05.1 / CA-05.3 el administrador elimina tras confirmar | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/productos.spec.js` |
-| 171 | CA-07.2 cambiar a inglés traduce la interfaz y se recuerda al recargar | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/usabilidad.spec.js` |
-| 172 | CA-08.3 el tema oscuro cambia el fondo y se recuerda al recargar | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/usabilidad.spec.js` |
-| 173 | CA-08.2 inicio de sesión sin violaciones graves de accesibilidad @celular | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/usabilidad.spec.js` |
-| 174 | CA-08.2 listado y formulario sin violaciones graves de accesibilidad @celular | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/usabilidad.spec.js` |
-| 175 | CA-08.1 sin desplazamiento horizontal y con acciones disponibles @celular | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/usabilidad.spec.js` |
-| 176 | CA-08.4 el inicio de sesión se completa solo con teclado | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/usabilidad.spec.js` |
-| 177 | CA-08.4 el enlace  | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/usabilidad.spec.js` |
-| 178 | CA-01.2 credenciales incorrectas muestran el error | Sistema (navegador) | Selenium WebDriver | `frontend/pruebas-selenium/flujo-principal.test.js` |
-| 179 | CA-01.1 / CA-02.1 / CA-03.2 el operario inicia sesión, registra un producto y lo encuentra | Sistema (navegador) | Selenium WebDriver | `frontend/pruebas-selenium/flujo-principal.test.js` |
-| 180 | CA-01.4 el operario no tiene botones de eliminar | Sistema (navegador) | Selenium WebDriver | `frontend/pruebas-selenium/flujo-principal.test.js` |
-| 181 | CA-05.3 el administrador ve eliminar y el diálogo pide confirmación | Sistema (navegador) | Selenium WebDriver | `frontend/pruebas-selenium/flujo-principal.test.js` |
-| 182 | CA-01.3 después de cerrar sesión la página protegida redirige al inicio | Sistema (navegador) | Selenium WebDriver | `frontend/pruebas-selenium/flujo-principal.test.js` |
-| 183 | CA-09.1 50 usuarios durante 2 min: p95 < 500 ms y errores < 1 % | Carga | k6 | `pruebas/carga/carga.js` |
-| 184 | Escalones de 50 a 300 usuarios hasta encontrar el punto de quiebre | Estrés | k6 | `pruebas/carga/estres.js` |
-| 185 | Salto de 10 a 250 usuarios en 10 s: errores < 5 % y recuperación | Pico | k6 | `pruebas/carga/pico.js` |
-| 186 | Mutantes en servicios y mapeador: mínimo 70 % detectados (resultado: 100 %) | Mutación | PIT | `backend/pom.xml` |
-| 187 | Escaneo pasivo del front-end desplegado en cada integración | Seguridad (dinámica) | OWASP ZAP baseline | `.github/workflows/ci-cd.yml` |
+| 118 | test_cada_modelo_acierta_las_fotos_reales_de_test | Unitaria e integración (inferencia) | pytest + TestClient | `inferencia/tests/test_modelo_real.py` |
+| 119 | CA-06.6 por defecto usa el modelo recomendado (ResNet50V2) | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
+| 120 | CA-06.6 el selector ofrece los 5 modelos con su exactitud y el ensamble | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
+| 121 | CA-06.6 elegir otro modelo vuelve a clasificar la misma foto con ese modelo | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
+| 122 | CA-06.6 se puede clasificar con el ensamble | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
+| 123 | CA-06.7 comparar muestra la predicción de los 5 modelos, el ensamble y si hay consenso | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
+| 124 | CA-06.7 cambiar de modo vuelve a procesar la foto ya elegida | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
+| 125 | CA-06.7 las métricas de test de los 5 modelos están disponibles | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
+| 126 | avisa cuando los modelos cargados son de prueba | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
+| 127 | si el catálogo no responde, igual se puede clasificar con el modelo por defecto del servidor | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/componentes/ClasificadorFoto.test.jsx` |
+| 128 | CA-02.2 un nombre de 2 caracteres muestra el error y no envía | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaFormularioProducto.test.jsx` |
+| 129 | CA-06.5 la foto clasificada precarga la categoría y se envía con el producto | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaFormularioProducto.test.jsx` |
+| 130 | CA-06.2 una foto que no es JPEG/PNG se rechaza sin llamar a la API | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaFormularioProducto.test.jsx` |
+| 131 | CA-06.4 si el servicio de clasificación no está disponible se muestra su mensaje | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaFormularioProducto.test.jsx` |
+| 132 | CA-02.5 el error 409 de la API se muestra al usuario | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaFormularioProducto.test.jsx` |
+| 133 | CA-04.1 en modo edición carga el producto y envía la actualización | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaFormularioProducto.test.jsx` |
+| 134 | CA-01.5 con campos vacíos muestra errores y no llama a la API | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaLogin.test.jsx` |
+| 135 | CA-01.2 muestra el mensaje de la API si las credenciales fallan | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaLogin.test.jsx` |
+| 136 | CA-01.1 con credenciales correctas guarda la sesión y entra | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaLogin.test.jsx` |
+| 137 | CA-07.2 cambiar el idioma traduce la pantalla y se recuerda | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaLogin.test.jsx` |
+| 138 | CA-08.3 el tema elegido se recuerda | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaLogin.test.jsx` |
+| 139 | CA-03.1 muestra los productos que devuelve la API | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
+| 140 | CA-02.6 el texto con etiquetas HTML se muestra literal, sin ejecutarse | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
+| 141 | CA-01.4 el USUARIO no ve el botón de eliminar | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
+| 142 | CA-05.3 el ADMIN debe confirmar antes de eliminar | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
+| 143 | CA-05.3 cancelar no elimina | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
+| 144 | CA-03.2 el filtro de texto consulta la API después de escribir | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
+| 145 | sin resultados muestra un mensaje | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
+| 146 | un error de red se muestra al usuario | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/paginas/PaginaProductos.test.jsx` |
+| 147 | CA-02.2 nombre de %i caracteres → válido=%s | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
+| 148 | CA-02.2 un nombre solo con espacios no es válido | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
+| 149 | CA-02.3 descripción de %i caracteres → válido=%s | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
+| 150 | CA-02.4 categoría y estado deben ser valores permitidos | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
+| 151 | CA-07.2 los mensajes salen en el idioma activo | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
+| 152 | CA-01.5 usuario y contraseña son obligatorios | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
+| 153 | CA-06.2 acepta JPEG y PNG y rechaza otros tipos | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
+| 154 | CA-06.3 límite de 5 MB: exacto se acepta, un byte más no | Unitaria (componentes) | Vitest + Testing Library | `frontend/src/validacion/esquemas.test.js` |
+| 155 | CA-01.1 el administrador inicia sesión y ve su rol | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/autenticacion.spec.js` |
+| 156 | CA-01.2 una contraseña incorrecta muestra un error genérico | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/autenticacion.spec.js` |
+| 157 | CA-01.3 sin sesión, una página protegida redirige al inicio de sesión | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/autenticacion.spec.js` |
+| 158 | CA-01.5 con campos vacíos no se envía el formulario | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/autenticacion.spec.js` |
+| 159 | cerrar sesión borra la sesión y vuelve al inicio | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/autenticacion.spec.js` |
+| 160 | CA-06.1 / CA-06.5 la foto sugiere la categoría y se guarda con el producto | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/clasificacion.spec.js` |
+| 161 | CA-06.5 el usuario puede cambiar la categoría sugerida | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/clasificacion.spec.js` |
+| 162 | CA-06.6 clasificar con el modelo que elige el usuario | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/clasificacion.spec.js` |
+| 163 | CA-06.7 comparar los 5 modelos y ver sus métricas | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/clasificacion.spec.js` |
+| 164 | CA-06.2 un archivo que no es imagen se rechaza en la interfaz | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/clasificacion.spec.js` |
+| 165 | CA-02.1 / CA-03.2 registrar un producto y encontrarlo con el filtro | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/productos.spec.js` |
+| 166 | CA-02.2 un nombre de 2 caracteres no se puede guardar | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/productos.spec.js` |
+| 167 | CA-02.5 un nombre repetido muestra el conflicto de la API | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/productos.spec.js` |
+| 168 | CA-02.6 un nombre con HTML se muestra como texto y no se ejecuta | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/productos.spec.js` |
+| 169 | CA-04.1 editar un producto cambia sus datos | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/productos.spec.js` |
+| 170 | CA-01.4 el operario no ve la opción de eliminar | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/productos.spec.js` |
+| 171 | CA-05.1 / CA-05.3 el administrador elimina tras confirmar | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/productos.spec.js` |
+| 172 | CA-07.2 cambiar a inglés traduce la interfaz y se recuerda al recargar | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/usabilidad.spec.js` |
+| 173 | CA-08.3 el tema oscuro cambia el fondo y se recuerda al recargar | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/usabilidad.spec.js` |
+| 174 | CA-08.2 inicio de sesión sin violaciones graves de accesibilidad @celular | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/usabilidad.spec.js` |
+| 175 | CA-08.2 listado y formulario sin violaciones graves de accesibilidad @celular | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/usabilidad.spec.js` |
+| 176 | CA-08.1 sin desplazamiento horizontal y con acciones disponibles @celular | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/usabilidad.spec.js` |
+| 177 | CA-08.4 el inicio de sesión se completa solo con teclado | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/usabilidad.spec.js` |
+| 178 | CA-08.4 el enlace  | Sistema (navegador) | Playwright + axe-core | `frontend/e2e/usabilidad.spec.js` |
+| 179 | CA-01.2 credenciales incorrectas muestran el error | Sistema (navegador) | Selenium WebDriver | `frontend/pruebas-selenium/flujo-principal.test.js` |
+| 180 | CA-01.1 / CA-02.1 / CA-03.2 el operario inicia sesión, registra un producto y lo encuentra | Sistema (navegador) | Selenium WebDriver | `frontend/pruebas-selenium/flujo-principal.test.js` |
+| 181 | CA-01.4 el operario no tiene botones de eliminar | Sistema (navegador) | Selenium WebDriver | `frontend/pruebas-selenium/flujo-principal.test.js` |
+| 182 | CA-05.3 el administrador ve eliminar y el diálogo pide confirmación | Sistema (navegador) | Selenium WebDriver | `frontend/pruebas-selenium/flujo-principal.test.js` |
+| 183 | CA-01.3 después de cerrar sesión la página protegida redirige al inicio | Sistema (navegador) | Selenium WebDriver | `frontend/pruebas-selenium/flujo-principal.test.js` |
+| 184 | CA-09.1 50 usuarios durante 2 min: p95 < 500 ms y errores < 1 % | Carga | k6 | `pruebas/carga/carga.js` |
+| 185 | Escalones de 50 a 300 usuarios hasta encontrar el punto de quiebre | Estrés | k6 | `pruebas/carga/estres.js` |
+| 186 | Salto de 10 a 250 usuarios en 10 s: errores < 5 % y recuperación | Pico | k6 | `pruebas/carga/pico.js` |
+| 187 | Mutantes en servicios y mapeador: mínimo 70 % detectados (resultado: 100 %) | Mutación | PIT | `backend/pom.xml` |
+| 188 | Escaneo pasivo del front-end desplegado en cada integración | Seguridad (dinámica) | OWASP ZAP baseline | `.github/workflows/ci-cd.yml` |

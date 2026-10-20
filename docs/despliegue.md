@@ -3,9 +3,9 @@ Nombre: despliegue.md
 Descripción: Guía de despliegue: local con Docker Compose y producción en Render (plan
              gratuito) disparada por GitHub Actions solo cuando todas las pruebas pasan.
 Fecha de creación: 2026-10-18
-Última actualización: 2026-10-18
+Última actualización: 2026-10-20
 Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
-Versión: 1.0.0
+Versión: 1.1.0
 -->
 
 # Despliegue
@@ -85,7 +85,9 @@ del pipeline sigue igual.
   antes.
 - La base de datos gratuita de Render **vence a los 30 días**. Alternativa sin vencimiento: Neon
   o Supabase, configurando `DB_URL`, `DB_USER` y `DB_PASSWORD` en el back-end.
-- 512 MB de memoria por servicio: por eso el modelo va en TensorFlow Lite (unos 47 MB) y el
-  back-end usa `-XX:MaxRAMPercentage=70`.
+- 512 MB de memoria por servicio: por eso los 5 modelos van en TensorFlow Lite (143 MB en
+  total; ResNet50V2, ViT-B/16 y DeiT-S en int8) y el servicio de inferencia usa ~283 MB con
+  todos cargados (pico de 293 MB con 6 comparaciones simultáneas). El back-end usa
+  `-XX:MaxRAMPercentage=70`.
 - La CPU es una fracción de la de un PC: los tiempos de la prueba de carga local no se
   trasladan a producción.

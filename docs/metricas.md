@@ -4,9 +4,9 @@ Descripción: Punto 7 (administración, control y monitoreo): métricas del sist
              evaluación, desempeño y producción de los integrantes, y monitoreo de errores y
              tareas. Indica dónde se mide cada cosa y cómo se interpreta.
 Fecha de creación: 2026-10-18
-Última actualización: 2026-10-18
+Última actualización: 2026-10-20
 Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
-Versión: 1.0.0
+Versión: 1.1.0
 -->
 
 # Administración, control y monitoreo
@@ -50,6 +50,20 @@ en `pruebas/carga/resultados/`.
 | Carga (`carga.js`, CA-09.1) | 50 durante 2 min | 5.243 | 28 ms | 222 ms | 0 % | Cumple (objetivo p95 < 500 ms y errores < 1 %) |
 | Estrés (`estres.js`) | escalones 50 → 300 | 48.258 | 21 ms | 766 ms | 0 % | No se alcanzó el punto de quiebre con 300 usuarios |
 | Pico (`pico.js`) | 10 → 250 en 10 s | 8.235 | 1,5 s | 6,8 s | 0 % | Sin errores y con recuperación, pero la latencia se dispara durante el salto |
+
+### Servicio de inferencia con los 5 modelos reales (PC local, 20-oct-2026)
+
+| Medida | Resultado | Objetivo |
+|---|---|---|
+| Memoria con los 5 modelos cargados | 283 MB | < 512 MB (plan gratuito) |
+| Pico con 6 comparaciones simultáneas | 293 MB, sin reinicios por memoria | < 512 MB |
+| Tiempo por foto del modelo más lento (ViT-B/16) | 0,67–0,74 s | < 1 s (CA-09.3) |
+| Comparar los 5 modelos y el ensamble en una foto | ~1,05 s | — |
+| Aciertos en las 25 fotos de test de `inferencia/tests/muestras` | 25/25 en cada modelo y en el ensamble | ≥ 24/25 |
+
+Con los modelos grandes en float16 el servicio llegaba a ~500 MB: el acelerador de CPU de
+LiteRT (XNNPACK) convierte los pesos float16 a float32 al cargarlos. Por eso ResNet50V2,
+ViT-B/16 y DeiT-S se exportan en int8 (notebook 08), sin pérdida de exactitud en la verificación.
 
 **Lectura.** La cantidad de usuarios no es lo que más pesa: el sistema aguanta 300 usuarios si
 llegan de forma gradual. Lo que lo degrada es que lleguen de golpe. La hipótesis, sin verificar,

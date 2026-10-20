@@ -2,9 +2,9 @@
 Nombre: README.md
 Descripción: Presentación del proyecto, arquitectura y cómo ejecutar, probar y desplegar.
 Fecha de creación: 2026-10-18
-Última actualización: 2026-10-18
+Última actualización: 2026-10-20
 Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
-Versión: 1.0.0
+Versión: 1.1.0
 -->
 
 # Clasificador de variedades de arroz
@@ -54,6 +54,22 @@ En la aplicación están los **5 modelos**: el usuario clasifica con el que elij
 recomendado y el que se usa por defecto) o con el ensamble, o activa **"Comparar los 5 modelos"**
 para ver en la misma foto la predicción, la confianza y el tiempo de cada uno, junto con sus
 métricas de test.
+
+![Comparación de los 5 modelos con una foto de test de Jasmine](docs/imagenes/comparacion_modelos.png)
+
+Los modelos van en TensorFlow Lite (notebook 08). Cada uno se verificó contra su original en
+500 fotos de test: coinciden en el 100 % de las predicciones.
+
+| Modelo | Formato | Tamaño | Tiempo por foto (CPU, contenedor) |
+|---|---|---|---|
+| CNN propia | float16 | 0,8 MB | ~28 ms |
+| EfficientNetB0 | float16 | 8,1 MB | ~26 ms |
+| ResNet50V2 | int8 | 24,1 MB | ~145 ms |
+| ViT-B/16 | int8 | 87,8 MB | ~670–740 ms |
+| DeiT-S | int8 | 22,8 MB | ~190–280 ms |
+
+Los 3 modelos grandes van en int8 para que el servicio quepa en los 512 MB del plan gratuito:
+con los 5 cargados usa ~283 MB (con float16 llegaba a ~500 MB).
 
 ## Ejecutar
 
