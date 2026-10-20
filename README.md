@@ -9,6 +9,9 @@ Versión: 1.1.0
 
 # Clasificador de variedades de arroz
 
+**Aplicación en línea:** https://arroz-frontend.onrender.com (plan gratuito: la primera visita
+puede tardar cerca de un minuto mientras los servicios despiertan).
+
 Proyecto de la materia **Inteligencia Artificial**. Clasifica fotos de granos en 5 variedades
 (Arborio, Basmati, Ipsala, Jasmine, Karacadag) con modelos entrenados sobre el
 [Rice Image Dataset](https://www.muratkoklu.com/datasets/) (75.000 imágenes), y pone el mejor

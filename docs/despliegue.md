@@ -51,6 +51,20 @@ sin Docker se usa `db/crear_base_manual.sql`.
 
 ## 2. Producción (Render, plan gratuito)
 
+**En línea:** https://arroz-frontend.onrender.com (desplegado el 20-oct-2026).
+
+| Servicio | URL |
+|---|---|
+| Front-end | https://arroz-frontend.onrender.com |
+| Back-end (API) | https://arroz-backend-3251.onrender.com |
+| Inferencia | https://arroz-inferencia.onrender.com |
+
+> Si un nombre ya está ocupado en Render, el servicio recibe un sufijo (`arroz-backend` quedó
+> como `arroz-backend-3251`). Hay que copiar la URL real de cada servicio desde su página en
+> Render: una URL supuesta puede pertenecer a otra persona, y el front-end le enviaría las
+> credenciales. Tras cambiar `VITE_API_URL` hay que volver a desplegar el front-end, porque la
+> URL queda fija al compilarlo.
+
 ### Una sola vez
 
 1. Crear una cuenta en https://render.com, iniciando sesión con GitHub.
