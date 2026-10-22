@@ -60,7 +60,8 @@
     "comparando": "Comparing the 5 models…",
     "comoFunciona": "How does it work?",
     "comoFuncionaTexto": "The models were trained with grain photos from the Rice Image Dataset (Koklu et al., 75,000 images) and evaluated on 11,206 photos they never saw during training: all of them are more than 99% accurate. Your photo is not stored; it is only used to classify it.",
-    "pie": "Artificial Intelligence course project · Julian Delgado and Cesar Camilo Hoyos Diaz"
+    "pie": "Artificial Intelligence course project · Julian Delgado and Cesar Camilo Hoyos Diaz",
+    "activando": "Starting the classification service: the free server sleeps when nobody uses it and takes up to a minute to wake up. You can choose your photo meanwhile."
   },
   "variedades": {
     "ARBORIO": "Italian short, rounded grain variety with a lot of starch. It is the typical rice for risotto.",

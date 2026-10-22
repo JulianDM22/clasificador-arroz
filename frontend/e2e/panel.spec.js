@@ -29,7 +29,9 @@ test.describe('HU-10 Administración', () => {
     await page.getByRole('button', { name: 'Probar con la foto de ejemplo de un grano Ipsala' }).click();
     await expect(page.getByTestId('variedad')).toHaveText('Ipsala', { timeout: 60_000 });
     await page.getByTestId('nav-panel').click();
-    await expect(page.getByTestId('cifra-clasificaciones')).toHaveText(String(antes + 1).replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
+    // Otras pruebas clasifican en paralelo: se exige al menos una clasificación más.
+    await expect.poll(async () => Number((await page.getByTestId('cifra-clasificaciones').textContent()).replace(/\./g, '')))
+      .toBeGreaterThanOrEqual(antes + 1);
   });
 
   test('CA-10.1 el operario no tiene panel: el enlace no aparece y la ruta lo devuelve a los lotes', async ({ page }) => {

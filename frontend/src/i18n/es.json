@@ -60,7 +60,8 @@
     "comparando": "Comparando los 5 modelos…",
     "comoFunciona": "¿Cómo funciona?",
     "comoFuncionaTexto": "Los modelos se entrenaron con fotos de granos del Rice Image Dataset (Koklu y colaboradores, 75.000 imágenes) y se evaluaron con 11.206 fotos que no vieron durante el entrenamiento: todos aciertan más del 99 %. Tu foto no se guarda; solo se usa para clasificarla.",
-    "pie": "Proyecto de la materia Inteligencia Artificial · Julian Delgado y Cesar Camilo Hoyos Diaz"
+    "pie": "Proyecto de la materia Inteligencia Artificial · Julian Delgado y Cesar Camilo Hoyos Diaz",
+    "activando": "Activando el servicio de clasificación: el servidor gratuito se duerme cuando nadie lo usa y tarda hasta un minuto en despertar. Puedes elegir tu foto mientras tanto."
   },
   "variedades": {
     "ARBORIO": "Variedad italiana de grano corto y redondeado, con mucho almidón. Es el arroz típico del risotto.",

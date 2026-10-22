@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderizar } from '../pruebas/utilidades';
-import PaginaInicio, { nivelConfianza } from './PaginaInicio';
+import PaginaInicio, { REINTENTO, conReintentos, esTemporal, nivelConfianza } from './PaginaInicio';
 import * as servicios from '../api/servicios';
 
 vi.mock('../api/servicios');
@@ -37,6 +37,7 @@ describe('PaginaInicio', () => {
     globalThis.URL.createObjectURL = vi.fn(() => 'blob:vista');
     globalThis.URL.revokeObjectURL = vi.fn();
     servicios.listarModelos.mockResolvedValue(CATALOGO);
+    REINTENTO.esperaMs = 1;
   });
 
   afterEach(() => vi.unstubAllGlobals());
@@ -118,6 +119,49 @@ describe('PaginaInicio', () => {
     inicio();
     await userEvent.upload(screen.getByTestId('input-foto'), jpeg());
     expect(await screen.findByTestId('error-clasificacion')).toHaveTextContent('Superó el límite');
+  });
+
+  it('si el servicio está dormido (503) reintenta solo y muestra el resultado cuando despierta', async () => {
+    servicios.clasificarFoto
+      .mockRejectedValueOnce({ response: { status: 503, data: {} } })
+      .mockRejectedValueOnce({ response: { status: 502, data: {} } })
+      .mockResolvedValueOnce(prediccion('IPSALA', 0.99));
+    inicio();
+    await userEvent.upload(screen.getByTestId('input-foto'), jpeg());
+    expect(await screen.findByTestId('variedad')).toHaveTextContent('Ipsala');
+    expect(servicios.clasificarFoto).toHaveBeenCalledTimes(3);
+    expect(screen.queryByTestId('error-clasificacion')).toBeNull();
+  });
+
+  it('la lista de modelos se vuelve a pedir hasta que el servicio despierta, avisando que se está activando', async () => {
+    let responder;
+    servicios.listarModelos
+      .mockRejectedValueOnce({ response: { status: 503, data: {} } })
+      .mockReturnValueOnce(new Promise((r) => { responder = r; }));
+    inicio();
+    expect(await screen.findByTestId('activando')).toHaveTextContent('Activando el servicio de clasificación');
+    responder(CATALOGO);
+    await waitFor(() => expect(screen.queryByTestId('activando')).toBeNull());
+    await userEvent.click(screen.getByText(/Opciones avanzadas/));
+    expect(screen.getByTestId('select-modelo')).toHaveTextContent('ResNet50V2');
+  });
+
+  it('conReintentos no repite errores definitivos (400) y se rinde tras el máximo de intentos', async () => {
+    const definitivo = vi.fn().mockRejectedValue({ response: { status: 400 } });
+    await expect(conReintentos(definitivo)).rejects.toEqual({ response: { status: 400 } });
+    expect(definitivo).toHaveBeenCalledTimes(1);
+
+    const siempreCaido = vi.fn().mockRejectedValue({ response: { status: 503 } });
+    const avisos = vi.fn();
+    await expect(conReintentos(siempreCaido, avisos)).rejects.toEqual({ response: { status: 503 } });
+    expect(siempreCaido).toHaveBeenCalledTimes(REINTENTO.intentos);
+    expect(avisos).toHaveBeenCalledTimes(REINTENTO.intentos - 1);
+  });
+
+  it('esTemporal: sin respuesta, 502, 503 y 504 sí; 400, 413 y 429 no', () => {
+    expect(esTemporal(new Error('sin red'))).toBe(true);
+    for (const s of [502, 503, 504]) expect(esTemporal({ response: { status: s } })).toBe(true);
+    for (const s of [400, 413, 429, 500]) expect(esTemporal({ response: { status: s } })).toBe(false);
   });
 
   it('"Clasificar otra foto" vuelve a mostrar la zona para subir', async () => {

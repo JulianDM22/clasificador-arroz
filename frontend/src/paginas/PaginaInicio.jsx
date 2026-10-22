@@ -4,11 +4,13 @@
  *              o prueba con una de ejemplo y ve la variedad, qué tan seguro está el modelo y una
  *              descripción de la variedad. Las opciones avanzadas permiten elegir el modelo o
  *              comparar los 5 (CA-06.6, CA-06.7). Si quien clasifica es del equipo, puede
- *              registrar el resultado como lote.
+ *              registrar el resultado como lote. En el plan gratuito los servicios se duermen: si
+ *              la API responde 502/503/504 o no responde, se reintenta solo hasta ~2 minutos
+ *              mientras se avisa que el servicio se está activando.
  * @fecha_creacion 2026-10-21
  * @actualizacion 2026-10-21
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
- * @version 1.0.0
+ * @version 1.1.0
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -29,6 +31,35 @@ import { ENSAMBLE, MetricasModelos, Probabilidades, TablaComparacion, numero, po
 
 /** Desde cuántos ms de espera se avisa que el servidor gratuito puede estar despertando. */
 const AVISO_LENTO_MS = 4000;
+
+/** Reintentos mientras el servicio despierta: cada 8 s, hasta 15 intentos (~2 min). */
+export const REINTENTO = { esperaMs: 8000, intentos: 15 };
+
+/**
+ * Errores pasajeros del plan gratuito mientras un servicio se activa.
+ * @param {unknown} e error de axios
+ * @returns {boolean}
+ */
+export const esTemporal = (e) => !e?.response || [502, 503, 504].includes(e.response.status);
+
+/**
+ * Ejecuta una petición y la repite mientras falle con un error pasajero.
+ * @template T
+ * @param {function(): Promise<T>} peticion
+ * @param {function(number): void} [alReintentar] recibe el número de intento fallido
+ * @returns {Promise<T>}
+ */
+export async function conReintentos(peticion, alReintentar = () => {}) {
+  for (let intento = 1; ; intento += 1) {
+    try {
+      return await peticion();
+    } catch (e) {
+      if (intento >= REINTENTO.intentos || !esTemporal(e)) throw e;
+      alReintentar(intento);
+      await new Promise((listo) => { setTimeout(listo, REINTENTO.esperaMs); });
+    }
+  }
+}
 
 /**
  * Nivel de seguridad de la predicción.
@@ -194,6 +225,7 @@ function Resultado({ resultado, vista, alReiniciar }) {
 export default function PaginaInicio() {
   const { t, i18n } = useTranslation();
   const [catalogo, setCatalogo] = useState(null);
+  const [activando, setActivando] = useState(false);
   const [modelo, setModelo] = useState('');
   const [foto, setFoto] = useState(null);
   const [cargando, setCargando] = useState(false);
@@ -205,8 +237,14 @@ export default function PaginaInicio() {
   const zona = useRef(null);
 
   useEffect(() => {
-    // Sin catálogo igual se puede clasificar con el modelo por defecto.
-    listarModelos().then((c) => { setCatalogo(c); setModelo(c.modelo_por_defecto); }).catch(() => {});
+    // Pedir el catálogo al abrir la página también despierta los servicios dormidos. Sin catálogo
+    // igual se puede clasificar con el modelo por defecto.
+    let vigente = true;
+    conReintentos(listarModelos, () => { if (vigente) setActivando(true); })
+      .then((c) => { if (vigente) { setCatalogo(c); setModelo(c.modelo_por_defecto); } })
+      .catch(() => {})
+      .finally(() => { if (vigente) setActivando(false); });
+    return () => { vigente = false; };
   }, []);
 
   useEffect(() => () => { if (foto?.vista) URL.revokeObjectURL(foto.vista); }, [foto]);
@@ -223,7 +261,7 @@ export default function PaginaInicio() {
     setResultado(null);
     setComparacion(null);
     try {
-      setResultado(await clasificarFoto(archivo, modeloActual || undefined));
+      setResultado(await conReintentos(() => clasificarFoto(archivo, modeloActual || undefined), () => setLento(true)));
     } catch (e) {
       setError(mensajeError(e, t));
     } finally {
@@ -260,7 +298,7 @@ export default function PaginaInicio() {
     setComparando(true);
     setError('');
     try {
-      setComparacion(await compararModelos(foto.archivo));
+      setComparacion(await conReintentos(() => compararModelos(foto.archivo)));
     } catch (e) {
       setError(mensajeError(e, t));
     } finally {
@@ -286,6 +324,9 @@ export default function PaginaInicio() {
       <Pasos />
 
       {catalogo?.es_prueba && <Alert severity="warning" data-testid="aviso-prueba">{t('clasificador.avisoPrueba')}</Alert>}
+      {activando && !cargando && (
+        <Alert severity="info" icon={<CircularProgress size={18} />} data-testid="activando">{t('inicio.activando')}</Alert>
+      )}
 
       <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }} ref={zona}>
         {!foto || error ? (
