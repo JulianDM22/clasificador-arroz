@@ -3,7 +3,7 @@
  * Descripción: Pruebas de integración y de sistema del CRUD: recorren la API real (seguridad,
  *              validación, servicio, JPA, Flyway y PostgreSQL) con un token obtenido por login.
  * Fecha de creación: 2026-10-17
- * Última actualización: 2026-10-17
+ * Última actualización: 2026-10-21
  * Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * Versión: 1.0.0
  */
@@ -16,6 +16,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -45,10 +46,14 @@ class ProductoIntegrationTest extends IntegracionBase {
         return base + " " + UUID.randomUUID().toString().substring(0, 8);
     }
 
-    private static String cuerpo(String nombre, String categoria, String descripcion, String estado) {
+    private static String cuerpo(String nombre, String categoria, String descripcion) {
         return """
-                {"nombre":%s,"categoria":"%s","descripcion":%s,"estado":"%s"}
-                """.formatted(cadena(nombre), categoria, cadena(descripcion), estado);
+                {"nombre":%s,"categoria":"%s","descripcion":%s}
+                """.formatted(cadena(nombre), categoria, cadena(descripcion));
+    }
+
+    private static String estado(String valor) {
+        return "{\"estado\":\"" + valor + "\"}";
     }
 
     private static String cadena(String s) {
@@ -58,7 +63,7 @@ class ProductoIntegrationTest extends IntegracionBase {
     private JsonNode crear(String nombre, String categoria) throws Exception {
         String r = mvc.perform(post("/api/v1/productos").header("Authorization", token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(cuerpo(nombre, categoria, "desc", "ACTIVO")))
+                        .content(cuerpo(nombre, categoria, "desc")))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return json.readTree(r);
@@ -89,10 +94,10 @@ class ProductoIntegrationTest extends IntegracionBase {
         String nuevoNombre = unico("Lote ciclo editado");
         String actualizado = mvc.perform(put("/api/v1/productos/" + id).header("Authorization", token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(cuerpo(nuevoNombre, "BASMATI", null, "INACTIVO")))
+                        .content(cuerpo(nuevoNombre, "BASMATI", null)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.categoria").value("BASMATI"))
-                .andExpect(jsonPath("$.estado").value("INACTIVO"))
+                .andExpect(jsonPath("$.estado").value("ACTIVO"))
                 .andReturn().getResponse().getContentAsString();
         assertThat(json.readTree(actualizado).get("fechaActualizacion").asText())
                 .isGreaterThanOrEqualTo(creado.get("fechaActualizacion").asText());
@@ -108,7 +113,7 @@ class ProductoIntegrationTest extends IntegracionBase {
     void location() throws Exception {
         String ubicacion = mvc.perform(post("/api/v1/productos").header("Authorization", token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(cuerpo(unico("Lote loc"), "IPSALA", null, "ACTIVO")))
+                        .content(cuerpo(unico("Lote loc"), "IPSALA", null)))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andReturn().getResponse().getHeader("Location");
@@ -122,7 +127,7 @@ class ProductoIntegrationTest extends IntegracionBase {
         crear(nombre, "ARBORIO");
         mvc.perform(post("/api/v1/productos").header("Authorization", token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(cuerpo(nombre.toUpperCase(), "ARBORIO", null, "ACTIVO")))
+                        .content(cuerpo(nombre.toUpperCase(), "ARBORIO", null)))
                 .andExpect(status().isConflict());
     }
 
@@ -135,7 +140,7 @@ class ProductoIntegrationTest extends IntegracionBase {
 
         mvc.perform(put("/api/v1/productos/" + idB).header("Authorization", token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(cuerpo(a, "ARBORIO", null, "ACTIVO")))
+                        .content(cuerpo(a, "ARBORIO", null)))
                 .andExpect(status().isConflict());
         mvc.perform(get("/api/v1/productos/" + idB).header("Authorization", token))
                 .andExpect(jsonPath("$.nombre", containsStringIgnoringCase("Lote B")));
@@ -146,7 +151,7 @@ class ProductoIntegrationTest extends IntegracionBase {
     void inexistentes() throws Exception {
         mvc.perform(put("/api/v1/productos/999999").header("Authorization", token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(cuerpo("Lote fantasma", "ARBORIO", null, "ACTIVO")))
+                        .content(cuerpo("Lote fantasma", "ARBORIO", null)))
                 .andExpect(status().isNotFound());
         mvc.perform(delete("/api/v1/productos/999999").header("Authorization", admin()))
                 .andExpect(status().isNotFound());
@@ -166,8 +171,61 @@ class ProductoIntegrationTest extends IntegracionBase {
                 .andExpect(jsonPath("$.totalElements").value(2))
                 .andExpect(jsonPath("$.content[*].categoria", everyItem(is("KARACADAG"))));
 
-        mvc.perform(get("/api/v1/productos").param("estado", "INACTIVO").header("Authorization", token))
-                .andExpect(jsonPath("$.content[*].estado", everyItem(is("INACTIVO"))));
+        long inactivo = crear("Filtro " + marca + " cuatro", "IPSALA").get("id").asLong();
+        mvc.perform(patch("/api/v1/productos/" + inactivo + "/estado").header("Authorization", admin())
+                        .contentType(MediaType.APPLICATION_JSON).content(estado("INACTIVO")))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/v1/productos").param("estado", "INACTIVO").param("q", marca)
+                        .header("Authorization", token))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(inactivo));
+    }
+
+    @Test
+    @DisplayName("CA-10.2 solo ADMIN activa y desactiva un lote; el operario recibe 403")
+    void cambiarEstado() throws Exception {
+        long id = crear(unico("Lote estado"), "BASMATI").get("id").asLong();
+        String url = "/api/v1/productos/" + id + "/estado";
+
+        mvc.perform(patch(url).header("Authorization", token)
+                        .contentType(MediaType.APPLICATION_JSON).content(estado("INACTIVO")))
+                .andExpect(status().isForbidden());
+        mvc.perform(patch(url).header("Authorization", admin())
+                        .contentType(MediaType.APPLICATION_JSON).content(estado("INACTIVO")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("INACTIVO"));
+        mvc.perform(get("/api/v1/productos/" + id).header("Authorization", token))
+                .andExpect(jsonPath("$.estado").value("INACTIVO"));
+        mvc.perform(patch(url).header("Authorization", admin())
+                        .contentType(MediaType.APPLICATION_JSON).content(estado("ACTIVO")))
+                .andExpect(jsonPath("$.estado").value("ACTIVO"));
+    }
+
+    @Test
+    @DisplayName("CA-10.2 estado inválido o ausente: 400; lote inexistente: 404")
+    void cambiarEstadoInvalido() throws Exception {
+        long id = crear(unico("Lote estado inv"), "BASMATI").get("id").asLong();
+        mvc.perform(patch("/api/v1/productos/" + id + "/estado").header("Authorization", admin())
+                        .contentType(MediaType.APPLICATION_JSON).content(estado("PERDIDO")))
+                .andExpect(status().isBadRequest());
+        mvc.perform(patch("/api/v1/productos/" + id + "/estado").header("Authorization", admin())
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errores.estado").value("El estado es obligatorio"));
+        mvc.perform(patch("/api/v1/productos/999999/estado").header("Authorization", admin())
+                        .contentType(MediaType.APPLICATION_JSON).content(estado("INACTIVO")))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("CA-10.3 un lote nuevo siempre queda ACTIVO, aunque el cuerpo pida otro estado")
+    void nuevoSiempreActivo() throws Exception {
+        String r = mvc.perform(post("/api/v1/productos").header("Authorization", token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"" + unico("Lote activo") + "\",\"categoria\":\"ARBORIO\",\"estado\":\"INACTIVO\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(json.readTree(r).get("estado").asText()).isEqualTo("ACTIVO");
     }
 
     @Test
@@ -194,7 +252,7 @@ class ProductoIntegrationTest extends IntegracionBase {
         String xss = "<script>alert('xss')</script>";
         long id = json.readTree(mvc.perform(post("/api/v1/productos").header("Authorization", token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(cuerpo(sql, "ARBORIO", xss, "ACTIVO")))
+                        .content(cuerpo(sql, "ARBORIO", xss)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString()).get("id").asLong();
 

@@ -34,8 +34,8 @@ Prometheus en http://localhost:9090 y Grafana en http://localhost:3000.
 | Métrica | Herramienta | Objetivo | Resultado actual |
 |---|---|---|---|
 | Pruebas que pasan | JUnit, pytest, Vitest, Playwright, Selenium | 100 % (si no, no se despliega) | 100 % |
-| Cobertura de líneas del back-end | JaCoCo | ≥ 80 % | 97,4 % (ramas: 90,4 %) |
-| Puntaje de mutación | PIT | ≥ 70 % | 100 % (58/58) |
+| Cobertura de líneas del back-end | JaCoCo | ≥ 80 % | 98,1 % (ramas: 85,3 %) |
+| Puntaje de mutación | PIT | ≥ 70 % | 100 % (87/87) |
 | Accesibilidad | axe-core en Playwright | 0 violaciones serias o críticas | 0 |
 | Rendimiento con 50 usuarios | k6 (`carga.js`) | p95 < 500 ms, errores < 1 % | p95 = 18 a 28 ms en dos corridas locales, 0 errores |
 | Hallazgos de seguridad | OWASP ZAP (línea base) | 0 alertas de riesgo alto | Ver reporte `zap-frontend.html` de cada ejecución |

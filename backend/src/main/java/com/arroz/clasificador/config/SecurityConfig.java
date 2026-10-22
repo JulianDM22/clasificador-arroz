@@ -2,9 +2,10 @@
  * Nombre: SecurityConfig.java
  * Descripción: Seguridad de la API: autenticación sin estado con JWT (HMAC-SHA256), permisos por
  *              rol, CORS restringido al front-end, contraseñas con BCrypt y respuestas 401/403 en
- *              JSON (HU-01).
+ *              JSON (HU-01). La clasificación es pública (HU-06); el inventario es del equipo y
+ *              solo ADMIN cambia el estado, elimina y ve las estadísticas (HU-10).
  * Fecha de creación: 2026-10-17
- * Última actualización: 2026-10-17
+ * Última actualización: 2026-10-21
  * Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * Versión: 1.0.0
  */
@@ -68,9 +69,11 @@ public class SecurityConfig {
      * Reglas de acceso.
      *
      * <ul>
-     *   <li>Públicos: login, documentación OpenAPI y salud/métricas.</li>
-     *   <li>USUARIO y ADMIN: consultar, crear, actualizar productos y clasificar fotos.</li>
-     *   <li>Solo ADMIN: eliminar productos (CA-01.4).</li>
+     *   <li>Públicos: login, clasificar fotos y ver los modelos (con límite por IP), documentación
+     *       OpenAPI y salud/métricas.</li>
+     *   <li>USUARIO y ADMIN: consultar, crear y actualizar lotes.</li>
+     *   <li>Solo ADMIN: activar o desactivar y eliminar lotes (CA-01.4, CA-10.2) y ver las
+     *       estadísticas (CA-10.1).</li>
      * </ul>
      *
      * @param http configurador
@@ -88,9 +91,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/clasificaciones", "/api/v1/clasificaciones/**")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/modelos").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/productos/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/productos/**", "/api/v1/clasificaciones/**", "/api/v1/modelos")
-                        .hasAnyRole("USUARIO", "ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/productos/*/estado").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/estadisticas/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/productos/**").hasAnyRole("USUARIO", "ADMIN")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(o -> o
                         .jwt(j -> j.jwtAuthenticationConverter(jwtAuthenticationConverter()))
@@ -142,9 +149,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cors = new CorsConfiguration();
         cors.setAllowedOrigins(propiedades.cors().origenes());
-        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cors.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept-Language"));
-        cors.setExposedHeaders(List.of("Location"));
+        cors.setExposedHeaders(List.of("Location", "Retry-After"));
         cors.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource fuente = new UrlBasedCorsConfigurationSource();
         fuente.registerCorsConfiguration("/**", cors);

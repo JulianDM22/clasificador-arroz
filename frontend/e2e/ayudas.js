@@ -1,11 +1,11 @@
 /**
  * @file ayudas.js
- * @description Funciones compartidas por las pruebas de Playwright: iniciar sesión, crear un
- *              producto por la interfaz y una imagen PNG mínima para clasificar.
+ * @description Utilidades compartidas por las pruebas de sistema con Playwright: usuarios de
+ *              prueba, foto sintética, nombres únicos, acceso del equipo y creación de lotes.
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-18
+ * @actualizacion 2026-10-21
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
- * @version 1.0.0
+ * @version 2.0.0
  */
 import { expect } from '@playwright/test';
 
@@ -24,20 +24,20 @@ export const FOTO_PNG = Buffer.from(
 export const unico = (base) => `${base} ${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
 
 /**
- * Inicia sesión por la interfaz y espera el listado.
+ * Inicia sesión por el acceso del equipo y espera el inventario de lotes.
  * @param {import('@playwright/test').Page} page
  * @param {'admin'|'operario'} quien
  */
 export async function entrar(page, quien = 'operario') {
-  await page.goto('/login');
+  await page.goto('/equipo/entrar');
   await page.getByLabel('Usuario').fill(USUARIOS[quien].usuario);
   await page.getByLabel('Contraseña').fill(USUARIOS[quien].clave);
   await page.getByTestId('boton-entrar').click();
-  await expect(page.getByRole('heading', { name: 'Productos', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Lotes de arroz', level: 1 })).toBeVisible();
 }
 
 /**
- * Crea un producto desde el formulario.
+ * Crea un lote desde el formulario.
  * @param {import('@playwright/test').Page} page
  * @param {{nombre: string, categoria?: string, descripcion?: string}} datos
  */
@@ -48,11 +48,11 @@ export async function crearProducto(page, { nombre, categoria = 'Ipsala', descri
   await page.getByRole('option', { name: categoria }).click();
   if (descripcion) await page.getByLabel('Descripción').fill(descripcion);
   await page.getByTestId('boton-guardar').click();
-  await expect(page.getByText('Producto guardado')).toBeVisible();
+  await expect(page.getByText('Lote guardado')).toBeVisible();
 }
 
 /**
- * Filtra el listado por texto y espera a que aparezca el producto.
+ * Filtra el inventario por texto y espera a que aparezca el lote.
  * @param {import('@playwright/test').Page} page
  * @param {string} texto
  */

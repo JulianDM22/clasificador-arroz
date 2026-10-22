@@ -3,7 +3,7 @@
  * @description Pruebas del listado: datos de la API, permisos por rol, confirmación al
  *              eliminar y texto potencialmente malicioso mostrado como texto (HU-03, HU-05).
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-18
+ * @actualizacion 2026-10-21
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * @version 1.0.0
  */
@@ -44,11 +44,43 @@ describe('PaginaProductos', () => {
     expect(document.querySelector('img[src="x"]')).toBeNull();
   });
 
-  it('CA-01.4 el USUARIO no ve el botón de eliminar', async () => {
+  it('CA-01.4 / CA-10.2 el USUARIO no ve eliminar ni el interruptor de estado, y se le explica su rol', async () => {
     listado('USUARIO');
     await screen.findByText('Lote Basmati');
     expect(screen.queryByTestId('eliminar-1')).toBeNull();
+    expect(screen.queryByTestId('estado-1')).toBeNull();
     expect(screen.getByTestId('editar-1')).toBeInTheDocument();
+    expect(screen.getByTestId('explicacion-rol')).toHaveTextContent('Como operario puedes registrar y editar lotes');
+  });
+
+  it('CA-10.2 el ADMIN desactiva un lote con el interruptor y la fila se actualiza', async () => {
+    servicios.cambiarEstadoProducto.mockResolvedValue({ ...productos[0], estado: 'INACTIVO' });
+    listado('ADMIN');
+    const interruptor = await screen.findByTestId('estado-1');
+    expect(interruptor).toBeChecked();
+    expect(screen.getByTestId('estado-2')).not.toBeChecked();
+
+    await userEvent.click(interruptor);
+
+    await waitFor(() => expect(servicios.cambiarEstadoProducto).toHaveBeenCalledWith(1, 'INACTIVO'));
+    expect(await screen.findByText('Lote desactivado')).toBeInTheDocument();
+    expect(screen.getByTestId('estado-1')).not.toBeChecked();
+  });
+
+  it('CA-10.2 el ADMIN activa un lote inactivo', async () => {
+    servicios.cambiarEstadoProducto.mockResolvedValue({ ...productos[1], estado: 'ACTIVO' });
+    listado('ADMIN');
+    await userEvent.click(await screen.findByTestId('estado-2'));
+    await waitFor(() => expect(servicios.cambiarEstadoProducto).toHaveBeenCalledWith(2, 'ACTIVO'));
+    expect(await screen.findByText('Lote activado')).toBeInTheDocument();
+  });
+
+  it('CA-10.2 si la API rechaza el cambio de estado se muestra el error y la fila no cambia', async () => {
+    servicios.cambiarEstadoProducto.mockRejectedValue({ response: { status: 403, data: { detail: 'Su rol no tiene permiso para realizar esta acción' } } });
+    listado('ADMIN');
+    await userEvent.click(await screen.findByTestId('estado-1'));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Su rol no tiene permiso');
+    expect(screen.getByTestId('estado-1')).toBeChecked();
   });
 
   it('CA-05.3 el ADMIN debe confirmar antes de eliminar', async () => {
@@ -61,7 +93,7 @@ describe('PaginaProductos', () => {
 
     await userEvent.click(within(dialogo).getByTestId('confirmar-eliminar'));
     await waitFor(() => expect(servicios.eliminarProducto).toHaveBeenCalledWith(1));
-    expect(await screen.findByText('Producto eliminado')).toBeInTheDocument();
+    expect(await screen.findByText('Lote eliminado')).toBeInTheDocument();
   });
 
   it('CA-05.3 cancelar no elimina', async () => {

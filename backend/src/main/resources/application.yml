@@ -2,7 +2,7 @@
 # Descripción: Configuración del back-end. Todos los valores sensibles se leen de variables de
 #              entorno; los valores por defecto solo sirven para desarrollo local.
 # Fecha de creación: 2026-10-17
-# Última actualización: 2026-10-17
+# Última actualización: 2026-10-21
 # Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
 # Versión: 1.0.0
 
@@ -40,6 +40,9 @@ server:
     max-swallow-size: 10MB
   error:
     include-stacktrace: never
+  # Detrás del proxy de Render: la IP del visitante sale de X-Forwarded-For, que Tomcat solo
+  # acepta si la petición viene de una red interna (así no se puede falsificar desde afuera).
+  forward-headers-strategy: native
 
 management:
   endpoints:
@@ -75,3 +78,5 @@ app:
     # Contraseñas de prueba para desarrollo local; en producción se definen por variable de entorno.
     admin-password: ${APP_ADMIN_PASSWORD:Admin123*}
     usuario-password: ${APP_USUARIO_PASSWORD:Operario123*}
+    # La clasificación es pública: máximo de fotos por IP y minuto (CA-06.9).
+    limite-clasificaciones-por-minuto: ${APP_LIMITE_CLASIFICACIONES:20}

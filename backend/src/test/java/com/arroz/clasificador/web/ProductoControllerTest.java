@@ -152,14 +152,13 @@ class ProductoControllerTest {
     }
 
     @Test
-    @DisplayName("CA-02.4 sin categoría ni estado: 400 con ambos errores")
-    void faltanEnumeraciones() throws Exception {
+    @DisplayName("CA-02.4 sin categoría: 400 con el error en el campo categoria")
+    void faltaCategoria() throws Exception {
         mvc.perform(post("/api/v1/productos").with(usuario())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json("Lote", null, null, null)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errores.categoria").exists())
-                .andExpect(jsonPath("$.errores.estado").exists());
+                .andExpect(jsonPath("$.errores.categoria").value("La categoría es obligatoria"));
     }
 
     @Test

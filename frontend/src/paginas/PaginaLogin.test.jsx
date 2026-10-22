@@ -3,7 +3,7 @@
  * @description Pruebas del inicio de sesión (HU-01): validación sin enviar, error de la API,
  *              ingreso correcto, cambio de idioma y de tema con persistencia.
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-18
+ * @actualizacion 2026-10-21
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * @version 1.0.0
  */
@@ -42,16 +42,16 @@ describe('PaginaLogin', () => {
     await userEvent.type(screen.getByLabelText(/Usuario/), '  admin ');
     await userEvent.type(screen.getByLabelText(/Contraseña/), 'Admin123*');
     await userEvent.click(screen.getByTestId('boton-entrar'));
-    await waitFor(() => expect(screen.getByText('pantalla-productos')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('destino')).toHaveTextContent('pantalla-lotes'));
     expect(servicios.iniciarSesion).toHaveBeenCalledWith({ username: 'admin', password: 'Admin123*' });
     expect(JSON.parse(sessionStorage.getItem('clasificador.sesion')).rol).toBe('ADMIN');
   });
 
   it('CA-07.2 cambiar el idioma traduce la pantalla y se recuerda', async () => {
     renderizar(<PaginaLogin />, { ruta: '/login' });
-    expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Acceso del equipo' })).toBeInTheDocument();
     await userEvent.click(screen.getByTestId('boton-idioma'));
-    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Team access' })).toBeInTheDocument();
     expect(localStorage.getItem('clasificador.idioma')).toBe('en');
     expect(document.documentElement.lang).toBe('en');
   });

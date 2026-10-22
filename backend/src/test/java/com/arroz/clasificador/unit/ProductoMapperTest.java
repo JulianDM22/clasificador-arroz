@@ -2,7 +2,7 @@
  * Nombre: ProductoMapperTest.java
  * Descripción: Pruebas unitarias de la normalización de textos al convertir DTO ↔ entidad.
  * Fecha de creación: 2026-10-17
- * Última actualización: 2026-10-17
+ * Última actualización: 2026-10-21
  * Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * Versión: 1.0.0
  */
@@ -29,10 +29,10 @@ import com.arroz.clasificador.model.Producto;
 class ProductoMapperTest {
 
     @Test
-    @DisplayName("recorta nombre y descripción")
+    @DisplayName("recorta nombre y descripción, y el lote nuevo queda ACTIVO (CA-10.3)")
     void recortaTextos() {
         Producto p = ProductoMapper.aEntidad(new ProductoRequest("  Lote A ", CategoriaArroz.JASMINE,
-                "  grano largo  ", EstadoProducto.ACTIVO));
+                "  grano largo  "));
         assertThat(p.getNombre()).isEqualTo("Lote A");
         assertThat(p.getDescripcion()).isEqualTo("grano largo");
         assertThat(p.getCategoria()).isEqualTo(CategoriaArroz.JASMINE);
@@ -45,9 +45,19 @@ class ProductoMapperTest {
     @ValueSource(strings = {"", "   "})
     @DisplayName("una descripción vacía se guarda como nula")
     void descripcionVacia(String descripcion) {
-        Producto p = ProductoMapper.aEntidad(new ProductoRequest("Lote", CategoriaArroz.IPSALA,
-                descripcion, EstadoProducto.INACTIVO));
+        Producto p = ProductoMapper.aEntidad(new ProductoRequest("Lote", CategoriaArroz.IPSALA, descripcion));
         assertThat(p.getDescripcion()).isNull();
+    }
+
+    @Test
+    @DisplayName("CA-10.2 actualizar copia los datos pero no cambia el estado")
+    void actualizarConservaEstado() {
+        Producto p = Producto.builder().nombre("Viejo").categoria(CategoriaArroz.ARBORIO)
+                .estado(EstadoProducto.INACTIVO).build();
+        ProductoMapper.actualizar(p, new ProductoRequest("Nuevo", CategoriaArroz.BASMATI, "d"));
+        assertThat(p.getNombre()).isEqualTo("Nuevo");
+        assertThat(p.getCategoria()).isEqualTo(CategoriaArroz.BASMATI);
+        assertThat(p.getEstado()).isEqualTo(EstadoProducto.INACTIVO);
     }
 
     @Test

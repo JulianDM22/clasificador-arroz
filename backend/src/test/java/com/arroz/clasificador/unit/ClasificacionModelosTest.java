@@ -4,7 +4,7 @@
  *              modelos y el catálogo de métricas (CA-06.6, CA-06.7). El servicio de inferencia se
  *              simula con MockRestServiceServer.
  * Fecha de creación: 2026-10-18
- * Última actualización: 2026-10-18
+ * Última actualización: 2026-10-21
  * Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * Versión: 1.0.0
  */
@@ -18,6 +18,8 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withResourceNotFound;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,6 +38,9 @@ import com.arroz.clasificador.exception.ArchivoInvalidoException;
 import com.arroz.clasificador.exception.ModeloDesconocidoException;
 import com.arroz.clasificador.exception.ServicioClasificacionException;
 import com.arroz.clasificador.model.CategoriaArroz;
+import com.arroz.clasificador.model.Clasificacion;
+import com.arroz.clasificador.model.TipoClasificacion;
+import com.arroz.clasificador.repository.ClasificacionRepository;
 import com.arroz.clasificador.service.ClasificacionService;
 
 @DisplayName("ClasificacionService: selección de modelo, comparación y catálogo (unitarias)")
@@ -60,6 +65,7 @@ class ClasificacionModelosTest {
                          "coincidencia_keras":1.0,"peso_ensamble":0.33}]}
             """;
 
+    private final ClasificacionRepository registro = Mockito.mock(ClasificacionRepository.class);
     private MockRestServiceServer servidor;
     private ClasificacionService servicio;
 
@@ -67,7 +73,7 @@ class ClasificacionModelosTest {
     void preparar() {
         RestClient.Builder builder = RestClient.builder().baseUrl("http://inferencia");
         servidor = MockRestServiceServer.bindTo(builder).build();
-        servicio = new ClasificacionService(builder.build());
+        servicio = new ClasificacionService(builder.build(), registro);
     }
 
     private static MockMultipartFile foto() {
@@ -137,6 +143,14 @@ class ClasificacionModelosTest {
         assertThat(r.modelos()).extracting(ClasificacionResponse::modelo).containsExactly("resnet50v2", "cnn_propia");
         assertThat(r.ensamble().categoria()).isEqualTo(CategoriaArroz.BASMATI);
         assertThat(r.consenso()).isFalse();
+
+        // CA-10.1 se registra una sola fila: la del ensamble, marcada como comparación.
+        ArgumentCaptor<Clasificacion> guardada = ArgumentCaptor.forClass(Clasificacion.class);
+        Mockito.verify(registro).save(guardada.capture());
+        assertThat(guardada.getValue().getTipo()).isEqualTo(TipoClasificacion.COMPARACION);
+        assertThat(guardada.getValue().getModelo()).isEqualTo("ensamble");
+        assertThat(guardada.getValue().getCategoria()).isEqualTo(CategoriaArroz.BASMATI);
+        assertThat(guardada.getValue().getConfianza()).isEqualTo(0.7);
     }
 
     @Test

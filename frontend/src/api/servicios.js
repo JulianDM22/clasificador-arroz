@@ -1,11 +1,12 @@
 /**
  * @file servicios.js
- * @description Funciones de acceso a la API: autenticación, CRUD de productos y clasificación.
- *              Intercambian JSON, salvo la clasificación, que envía la foto como multipart.
+ * @description Funciones de acceso a la API: autenticación, CRUD de lotes (productos), cambio
+ *              de estado y estadísticas (solo ADMIN) y clasificación pública. Intercambian JSON,
+ *              salvo la clasificación, que envía la foto como multipart.
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-18
+ * @actualizacion 2026-10-21
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
- * @version 1.0.0
+ * @version 1.1.0
  */
 import cliente from './cliente';
 
@@ -15,7 +16,7 @@ import cliente from './cliente';
  * @property {string} nombre
  * @property {'ARBORIO'|'BASMATI'|'IPSALA'|'JASMINE'|'KARACADAG'} categoria
  * @property {string} [descripcion]
- * @property {'ACTIVO'|'INACTIVO'} estado
+ * @property {'ACTIVO'|'INACTIVO'} [estado] lo asigna la API: los lotes nuevos quedan ACTIVOS
  */
 
 /**
@@ -51,6 +52,22 @@ export const actualizarProducto = (id, producto) => cliente.put(`/productos/${id
 
 /** @param {number} id @returns {Promise<void>} */
 export const eliminarProducto = (id) => cliente.delete(`/productos/${id}`).then(() => undefined);
+
+/**
+ * Activa o desactiva un lote (solo ADMIN).
+ * @param {number} id
+ * @param {'ACTIVO'|'INACTIVO'} estado
+ * @returns {Promise<Producto>}
+ */
+export const cambiarEstadoProducto = (id, estado) => cliente.patch(`/productos/${id}/estado`, { estado }).then((r) => r.data);
+
+/**
+ * Estadísticas del panel (solo ADMIN).
+ * @returns {Promise<{lotes: {total: number, activos: number, inactivos: number, porVariedad: Object<string, number>},
+ *   clasificaciones: {total: number, ultimos7Dias: number, porVariedad: Object<string, number>,
+ *   porModelo: Object<string, number>, porDia: {fecha: string, cantidad: number}[]}}>}
+ */
+export const obtenerEstadisticas = () => cliente.get('/estadisticas').then((r) => r.data);
 
 /**
  * @typedef {Object} Prediccion

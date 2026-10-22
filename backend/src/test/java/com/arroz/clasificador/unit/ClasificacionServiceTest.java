@@ -3,7 +3,7 @@
  * Descripción: Pruebas unitarias del cliente del servicio de inferencia. El servidor HTTP se
  *              simula con MockRestServiceServer (HU-06).
  * Fecha de creación: 2026-10-17
- * Última actualización: 2026-10-17
+ * Última actualización: 2026-10-21
  * Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * Versión: 1.0.0
  */
@@ -18,9 +18,12 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -32,6 +35,9 @@ import com.arroz.clasificador.exception.ArchivoGrandeException;
 import com.arroz.clasificador.exception.ArchivoInvalidoException;
 import com.arroz.clasificador.exception.ServicioClasificacionException;
 import com.arroz.clasificador.model.CategoriaArroz;
+import com.arroz.clasificador.model.Clasificacion;
+import com.arroz.clasificador.model.TipoClasificacion;
+import com.arroz.clasificador.repository.ClasificacionRepository;
 import com.arroz.clasificador.service.ClasificacionService;
 
 @DisplayName("ClasificacionService (unitarias)")
@@ -45,6 +51,7 @@ class ClasificacionServiceTest {
              "modelo":"resnet50v2"}
             """;
 
+    private final ClasificacionRepository registro = Mockito.mock(ClasificacionRepository.class);
     private MockRestServiceServer servidor;
     private ClasificacionService servicio;
 
@@ -52,7 +59,7 @@ class ClasificacionServiceTest {
     void preparar() {
         RestClient.Builder builder = RestClient.builder().baseUrl("http://inferencia");
         servidor = MockRestServiceServer.bindTo(builder).build();
-        servicio = new ClasificacionService(builder.build());
+        servicio = new ClasificacionService(builder.build(), registro);
     }
 
     @Test
@@ -67,6 +74,32 @@ class ClasificacionServiceTest {
         assertThat(r.confianza()).isEqualTo(0.97);
         assertThat(r.probabilidades()).hasSize(5);
         servidor.verify();
+    }
+
+    @Test
+    @DisplayName("CA-10.1 cada clasificación exitosa se registra (sin la foto) para las estadísticas")
+    void registraClasificacion() {
+        servidor.expect(requestTo("http://inferencia/predecir")).andRespond(withSuccess(RESPUESTA, MediaType.APPLICATION_JSON));
+
+        servicio.clasificar(new MockMultipartFile("archivo", "g.jpg", "image/jpeg", JPEG));
+
+        ArgumentCaptor<Clasificacion> guardada = ArgumentCaptor.forClass(Clasificacion.class);
+        Mockito.verify(registro).save(guardada.capture());
+        assertThat(guardada.getValue().getTipo()).isEqualTo(TipoClasificacion.UN_MODELO);
+        assertThat(guardada.getValue().getModelo()).isEqualTo("resnet50v2");
+        assertThat(guardada.getValue().getCategoria()).isEqualTo(CategoriaArroz.BASMATI);
+        assertThat(guardada.getValue().getConfianza()).isEqualTo(0.97);
+    }
+
+    @Test
+    @DisplayName("CA-10.1 si no se puede registrar, la clasificación igual se entrega")
+    void registroFallaNoBloquea() {
+        servidor.expect(requestTo("http://inferencia/predecir")).andRespond(withSuccess(RESPUESTA, MediaType.APPLICATION_JSON));
+        Mockito.when(registro.save(Mockito.any())).thenThrow(new DataAccessResourceFailureException("sin base"));
+
+        ClasificacionResponse r = servicio.clasificar(new MockMultipartFile("archivo", "g.jpg", "image/jpeg", JPEG));
+
+        assertThat(r.categoria()).isEqualTo(CategoriaArroz.BASMATI);
     }
 
     @Test
@@ -163,6 +196,7 @@ class ClasificacionServiceTest {
         servidor.expect(requestTo("http://inferencia/predecir")).andRespond(withServerError());
         assertThatThrownBy(() -> servicio.clasificar(new MockMultipartFile("archivo", "g.jpg", "image/jpeg", JPEG)))
                 .isInstanceOf(ServicioClasificacionException.class);
+        Mockito.verifyNoInteractions(registro);
     }
 
     @Test

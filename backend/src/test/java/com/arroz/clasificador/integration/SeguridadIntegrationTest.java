@@ -3,7 +3,7 @@
  * Descripción: Pruebas de seguridad sobre la aplicación completa: autenticación, tokens
  *              alterados o vencidos, permisos por rol, CORS y cabeceras de seguridad (HU-01).
  * Fecha de creación: 2026-10-17
- * Última actualización: 2026-10-17
+ * Última actualización: 2026-10-21
  * Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * Versión: 1.0.0
  */
@@ -11,6 +11,7 @@ package com.arroz.clasificador.integration;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -74,10 +75,23 @@ class SeguridadIntegrationTest extends IntegracionBase {
     }
 
     @Test
-    @DisplayName("CA-01.3 sin token: 401")
+    @DisplayName("CA-01.3 sin token: 401 en el inventario y en las estadísticas")
     void sinToken() throws Exception {
         mvc.perform(get("/api/v1/productos")).andExpect(status().isUnauthorized());
-        mvc.perform(post("/api/v1/clasificaciones")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/estadisticas")).andExpect(status().isUnauthorized());
+        mvc.perform(patch("/api/v1/productos/1/estado")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("CA-10.1 las estadísticas son solo para ADMIN: el operario recibe 403")
+    void estadisticasSoloAdmin() throws Exception {
+        mvc.perform(get("/api/v1/estadisticas").header("Authorization", operario()))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/estadisticas").header("Authorization", admin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.lotes.total").isNumber())
+                .andExpect(jsonPath("$.lotes.porVariedad.ARBORIO").isNumber())
+                .andExpect(jsonPath("$.clasificaciones.porDia.length()").value(14));
     }
 
     @Test

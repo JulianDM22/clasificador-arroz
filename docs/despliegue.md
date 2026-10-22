@@ -3,7 +3,7 @@ Nombre: despliegue.md
 Descripción: Guía de despliegue: local con Docker Compose y producción en Render (plan
              gratuito) disparada por GitHub Actions solo cuando todas las pruebas pasan.
 Fecha de creación: 2026-10-18
-Última actualización: 2026-10-20
+Última actualización: 2026-10-21
 Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
 Versión: 1.1.0
 -->
@@ -36,7 +36,12 @@ docker compose up -d --build --wait
 | Servicio de inferencia | http://localhost:8000/salud |
 | Monitoreo (opcional) | `docker compose --profile monitoreo up -d` → Grafana http://localhost:3000 |
 
-Usuarios de prueba: `admin` / `Admin123*` (ADMIN) y `operario` / `Operario123*` (USUARIO).
+La página pública (clasificar) no pide cuenta. Usuarios de desarrollo del área del equipo:
+`admin` / `Admin123*` (ADMIN) y `operario` / `Operario123*` (USUARIO).
+
+En Docker Compose el límite de clasificaciones por IP es de 300 por minuto, porque las pruebas de
+sistema clasifican muchas fotos seguidas desde la misma máquina. En producción queda en 20
+(variable `APP_LIMITE_CLASIFICACIONES` del back-end; 0 lo desactiva).
 
 > **Regla de las migraciones.** Un archivo `V<n>__*.sql` que ya se aplicó en alguna base **no se
 > vuelve a editar**, ni siquiera los comentarios: Flyway guarda una huella de cada migración y el
@@ -46,7 +51,8 @@ Usuarios de prueba: `admin` / `Admin123*` (ADMIN) y `operario` / `Operario123*` 
 
 **Base de datos.** El contenedor de PostgreSQL ejecuta `db/init/01_crear_esquema_y_permisos.sql`
 la primera vez. Después, el back-end aplica con Flyway `V1__crear_esquema.sql` (tablas, índices y
-restricciones) y `V2__datos_iniciales.sql` (productos de ejemplo). Para un PostgreSQL instalado
+restricciones), `V2__datos_iniciales.sql` (productos de ejemplo) y
+`V3__registro_clasificaciones.sql` (registro de clasificaciones para el panel del administrador). Para un PostgreSQL instalado
 sin Docker se usa `db/crear_base_manual.sql`.
 
 ## 2. Producción (Render, plan gratuito)

@@ -2,9 +2,9 @@
 Nombre: README.md
 Descripción: Presentación del proyecto, arquitectura y cómo ejecutar, probar y desplegar.
 Fecha de creación: 2026-10-18
-Última actualización: 2026-10-20
+Última actualización: 2026-10-21
 Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
-Versión: 1.1.0
+Versión: 1.2.0
 -->
 
 # Clasificador de variedades de arroz
@@ -14,26 +14,38 @@ puede tardar cerca de un minuto mientras los servicios despiertan).
 
 Proyecto de la materia **Inteligencia Artificial**. Clasifica fotos de granos en 5 variedades
 (Arborio, Basmati, Ipsala, Jasmine, Karacadag) con modelos entrenados sobre el
-[Rice Image Dataset](https://www.muratkoklu.com/datasets/) (75.000 imágenes), y pone el mejor
-modelo al servicio de una aplicación web de inventario de lotes de arroz.
+[Rice Image Dataset](https://www.muratkoklu.com/datasets/) (75.000 imágenes).
+
+**Cómo se usa la página:**
+- **Cualquier persona**, sin cuenta, entra, sube la foto de un grano (o prueba con una de las
+  fotos de ejemplo) y ve la variedad, qué tan seguro está el modelo y una descripción de la
+  variedad. En las opciones avanzadas puede elegir el modelo o comparar los 5.
+- **El equipo** entra por "Acceso del equipo" al inventario de lotes de arroz:
+  - el **operario** registra y edita lotes, y puede guardar como lote lo que acaba de clasificar;
+  - el **administrador** además activa o desactiva lotes, los elimina y tiene un **panel** con
+    las estadísticas del inventario y del uso del clasificador.
+
+![Página pública](docs/imagenes/pagina_publica.png)
+
+![Resultado de una foto de ejemplo](docs/imagenes/resultado_clasificacion.png)
 
 ## Arquitectura
 
 ```
 React + Material UI ──JSON──► Spring Boot (API REST, JWT) ──► PostgreSQL
-    (frontend/)                    (backend/)
+    (frontend/)                    (backend/)          (lotes, usuarios y registro de clasificaciones)
                                        │ foto (multipart, clave X-API-Key)
                                        ▼
-                         FastAPI + ResNet50V2 en TensorFlow Lite
+                     FastAPI + los 5 modelos en TensorFlow Lite
                                   (inferencia/)
 ```
 
 | Carpeta | Contenido |
 |---|---|
 | `notebooks/` | Temas 1 a 6 de IA (Kaggle): preparación de datos, Hyperband, validación cruzada, 5 modelos (3 CNN y 2 transformers), ensambles, GAN, aprendizaje federado y distribuido, exportación del modelo |
-| `backend/` | API REST: CRUD de productos, autenticación JWT, i18n, OpenAPI, Flyway |
-| `inferencia/` | Servicio que clasifica la foto con el modelo |
-| `frontend/` | Interfaz web: CRUD, clasificación por foto, temas, i18n, accesibilidad |
+| `backend/` | API REST: clasificación pública con límite por IP, CRUD de lotes, roles, estadísticas, autenticación JWT, i18n, OpenAPI, Flyway |
+| `inferencia/` | Servicio que clasifica la foto con los 5 modelos y el ensamble |
+| `frontend/` | Interfaz web: página pública de clasificación, inventario de lotes, panel del administrador, temas, i18n, accesibilidad |
 | `pruebas/carga/` | Pruebas de carga, estrés y pico con k6 |
 | `db/` | Scripts de creación e inicialización de la base de datos |
 | `monitoreo/` | Prometheus, alertas y tablero de Grafana |
@@ -53,10 +65,10 @@ React + Material UI ──JSON──► Spring Boot (API REST, JWT) ──► Po
 Los ensambles (homogéneo, heterogéneo e híbrido) llegan a 99,93 %, pero la mejora frente a
 ResNet50V2 solo no es significativa (prueba de McNemar).
 
-En la aplicación están los **5 modelos**: el usuario clasifica con el que elija (ResNet50V2 es el
-recomendado y el que se usa por defecto) o con el ensamble, o activa **"Comparar los 5 modelos"**
-para ver en la misma foto la predicción, la confianza y el tiempo de cada uno, junto con sus
-métricas de test.
+En la aplicación están los **5 modelos**: por defecto se usa ResNet50V2, el más preciso, y en las
+opciones avanzadas se puede elegir otro, usar los 5 juntos (ensamble) o **comparar los 5** con la
+misma foto para ver la predicción, la confianza y el tiempo de cada uno, junto con sus métricas
+de test.
 
 ![Comparación de los 5 modelos con una foto de test de Jasmine](docs/imagenes/comparacion_modelos.png)
 
@@ -80,7 +92,9 @@ con los 5 cargados usa ~283 MB (con float16 llegaba a ~500 MB).
 docker compose up -d --build --wait
 ```
 
-Abrir http://localhost:8081 con `admin` / `Admin123*` o `operario` / `Operario123*`.
+Abrir http://localhost:8081. Para el área del equipo ("Acceso del equipo"), los usuarios de
+desarrollo son `admin` / `Admin123*` y `operario` / `Operario123*` (en producción se usan otras
+contraseñas, definidas en Render).
 Documentación de la API: http://localhost:8080/swagger-ui.html.
 
 ## Probar

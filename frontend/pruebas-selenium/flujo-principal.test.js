@@ -4,7 +4,7 @@
  *              aplicación desplegada: inicio de sesión, registro, búsqueda, permisos por rol y
  *              cierre de sesión. Se ejecutan con el corredor de pruebas de Node (node --test).
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-18
+ * @actualizacion 2026-10-21
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * @version 1.0.0
  */
@@ -22,7 +22,7 @@ const esperar = (localizador) => driver.wait(until.elementLocated(localizador), 
 const visible = async (localizador) => driver.wait(until.elementIsVisible(await esperar(localizador)), ESPERA);
 
 async function entrar(usuario, clave) {
-  await driver.get(`${URL}/login`);
+  await driver.get(`${URL}/equipo/entrar`);
   await (await visible(By.id('username'))).sendKeys(usuario);
   await driver.findElement(By.id('password')).sendKeys(clave);
   await driver.findElement(porTestId('boton-entrar')).click();
@@ -31,7 +31,7 @@ async function entrar(usuario, clave) {
 
 async function salir() {
   await (await visible(porTestId('boton-salir'))).click();
-  await driver.wait(until.urlContains('/login'), ESPERA);
+  await visible(porTestId('nav-equipo'));
 }
 
 describe('Selenium · flujo principal', () => {
@@ -41,7 +41,7 @@ describe('Selenium · flujo principal', () => {
     driver = await new Builder().forBrowser('chrome').setChromeOptions(opciones).build();
     // En Linux, Chrome ignora --lang: se fija el idioma de la aplicación (español) para que las
     // pruebas no dependan del idioma del sistema donde corren.
-    await driver.get(`${URL}/login`);
+    await driver.get(`${URL}/`);
     await driver.executeScript("localStorage.setItem('clasificador.idioma', 'es')");
   });
 
@@ -49,8 +49,16 @@ describe('Selenium · flujo principal', () => {
     await driver?.quit();
   });
 
+  it('CA-06.8 un visitante sin cuenta clasifica una foto de ejemplo', async () => {
+    await driver.get(`${URL}/`);
+    await (await visible(By.css('[aria-label="Probar con la foto de ejemplo de un grano Arborio"]'))).click();
+    const variedad = await driver.wait(until.elementLocated(porTestId('variedad')), 60000);
+    await driver.wait(until.elementTextIs(variedad, 'Arborio'), ESPERA);
+    assert.match(await driver.findElement(porTestId('seguridad')).getText(), /de seguridad$/);
+  });
+
   it('CA-01.2 credenciales incorrectas muestran el error', async () => {
-    await driver.get(`${URL}/login`);
+    await driver.get(`${URL}/equipo/entrar`);
     await (await visible(By.id('username'))).sendKeys('admin');
     await driver.findElement(By.id('password')).sendKeys('incorrecta');
     await driver.findElement(porTestId('boton-entrar')).click();
@@ -58,7 +66,7 @@ describe('Selenium · flujo principal', () => {
     assert.equal(await error.getText(), 'Usuario o contraseña incorrectos');
   });
 
-  it('CA-01.1 / CA-02.1 / CA-03.2 el operario inicia sesión, registra un producto y lo encuentra', async () => {
+  it('CA-01.1 / CA-02.1 / CA-03.2 el operario inicia sesión, registra un lote y lo encuentra', async () => {
     await entrar('operario', process.env.E2E_USUARIO_PASSWORD || 'Operario123*');
     const nombre = `Selenium ${Date.now().toString(36)}`;
 
@@ -86,9 +94,10 @@ describe('Selenium · flujo principal', () => {
     assert.match(textoFila, /Jasmine/);
   });
 
-  it('CA-01.4 el operario no tiene botones de eliminar', async () => {
-    const botones = await driver.findElements(By.css('[data-testid^="eliminar-"]'));
-    assert.equal(botones.length, 0);
+  it('CA-01.4 / CA-10.2 el operario no tiene botones de eliminar ni interruptores de estado', async () => {
+    assert.equal((await driver.findElements(By.css('[data-testid^="eliminar-"]'))).length, 0);
+    assert.equal((await driver.findElements(By.css('[data-testid^="estado-"]'))).length, 0);
+    assert.equal((await driver.findElements(porTestId('nav-panel'))).length, 0);
     await salir();
   });
 
@@ -96,15 +105,15 @@ describe('Selenium · flujo principal', () => {
     await entrar('admin', process.env.E2E_ADMIN_PASSWORD || 'Admin123*');
     await (await visible(By.css('[data-testid^="eliminar-"]'))).click();
     const dialogo = await visible(By.css('[role="dialog"]'));
-    assert.match(await dialogo.getText(), /¿Eliminar producto\?/);
+    assert.match(await dialogo.getText(), /¿Eliminar lote\?/);
     await dialogo.findElement(By.xpath(".//button[normalize-space()='Cancelar']")).click();
     await driver.wait(until.stalenessOf(dialogo), ESPERA);
     await salir();
   });
 
-  it('CA-01.3 después de cerrar sesión la página protegida redirige al inicio', async () => {
-    await driver.get(`${URL}/productos`);
-    await driver.wait(until.urlContains('/login'), ESPERA);
-    assert.ok((await driver.getCurrentUrl()).endsWith('/login'));
+  it('CA-01.3 después de cerrar sesión la página del equipo redirige al acceso del equipo', async () => {
+    await driver.get(`${URL}/equipo/lotes`);
+    await driver.wait(until.urlContains('/equipo/entrar'), ESPERA);
+    assert.ok((await driver.getCurrentUrl()).endsWith('/equipo/entrar'));
   });
 });

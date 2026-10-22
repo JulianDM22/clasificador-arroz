@@ -1,81 +1,83 @@
 {
-  "app": { "titulo": "Rice Classifier", "saltar": "Skip to main content" },
+  "app": {
+    "titulo": "Rice Classifier",
+    "saltar": "Skip to main content"
+  },
   "menu": {
-    "productos": "Products",
+    "navegacion": "Main navigation",
+    "clasificar": "Classify",
+    "lotes": "Batches",
+    "panel": "Dashboard",
+    "equipo": "Team access",
     "cerrarSesion": "Sign out",
     "idioma": "Switch language to Spanish",
     "temaOscuro": "Switch to dark theme",
     "temaClaro": "Switch to light theme",
-    "usuario": "Signed in as {{usuario}} ({{rol}})"
+    "usuario": "{{usuario}} · {{rol}}"
   },
-  "login": {
-    "titulo": "Sign in",
-    "usuario": "Username",
-    "contrasena": "Password",
-    "entrar": "Sign in",
-    "ayuda": "Test users: admin (ADMIN) and operario (USER)."
+  "roles": {
+    "ADMIN": "Administrator",
+    "USUARIO": "Operator"
   },
-  "productos": {
-    "titulo": "Products",
-    "nuevo": "New product",
-    "buscar": "Search by name",
-    "todas": "All",
-    "todos": "All",
-    "vacio": "No products match the filters.",
-    "editar": "Edit {{nombre}}",
-    "eliminar": "Delete {{nombre}}",
-    "filasPorPagina": "Rows per page",
-    "rango": "{{desde}}–{{hasta}} of {{total}}",
-    "eliminado": "Product deleted",
-    "guardado": "Product saved",
-    "confirmarTitulo": "Delete product?",
-    "confirmarTexto": "“{{nombre}}” will be deleted. This cannot be undone.",
-    "cancelar": "Cancel",
-    "confirmarEliminar": "Delete",
-    "cargando": "Loading products"
+  "inicio": {
+    "titulo": "Which rice variety is it?",
+    "subtitulo": "Upload a photo of a grain and an artificial intelligence model tells you which of these 5 varieties it is: Arborio, Basmati, Ipsala, Jasmine or Karacadag.",
+    "pasosTitulo": "How to use it",
+    "paso1Titulo": "Choose a photo",
+    "paso1": "Of a single grain, on a dark background.",
+    "paso2Titulo": "Wait a few seconds",
+    "paso2": "The model analyzes the shape of the grain.",
+    "paso3Titulo": "See the result",
+    "paso3": "The variety and how confident the model is.",
+    "subirTitulo": "Upload a photo of a grain",
+    "arrastrar": "Drag it here or use the button:",
+    "elegir": "Choose a photo",
+    "formatos": "JPEG or PNG, up to 5 MB.",
+    "consejo": "For a good result: a single grain, centered, on a black background, like the sample photos.",
+    "ejemplos": "No photo at hand? Try one of the samples:",
+    "ejemplo": "Try the sample photo of a {{variedad}} grain",
+    "analizando": "Analyzing the photo…",
+    "despertando": "The first time it may take up to a minute while the server wakes up.",
+    "resultadoTitulo": "Result",
+    "esVariedad": "It is",
+    "seguridad": "{{valor}} confidence",
+    "nivel": {
+      "alto": "The model is very confident.",
+      "medio": "The model is fairly confident, but not completely.",
+      "bajo": "The model is not confident. Try another photo: a single grain, centered, on a dark background."
+    },
+    "tuFoto": "Your photo",
+    "analizadoCon": "Analyzed with {{modelo}} in {{segundos}} s.",
+    "otraFoto": "Classify another photo",
+    "registrarLote": "Register as a batch",
+    "detalle": "See the probability of each variety",
+    "avanzadas": "Advanced options: choose the model or compare all 5",
+    "avanzadasTexto": "The project trained 5 artificial intelligence models. The most accurate one is used by default; here you can choose another one or compare all 5 on the same photo.",
+    "modelo": "Model",
+    "recomendado": "recommended",
+    "ensamble": "All 5 together (weighted vote)",
+    "comparar": "Compare the 5 models on this photo",
+    "comparando": "Comparing the 5 models…",
+    "comoFunciona": "How does it work?",
+    "comoFuncionaTexto": "The models were trained with grain photos from the Rice Image Dataset (Koklu et al., 75,000 images) and evaluated on 11,206 photos they never saw during training: all of them are more than 99% accurate. Your photo is not stored; it is only used to classify it.",
+    "pie": "Artificial Intelligence course project · Julian Delgado and Cesar Camilo Hoyos Diaz"
   },
-  "campos": {
-    "id": "Id",
-    "nombre": "Name",
-    "categoria": "Category",
-    "descripcion": "Description",
-    "estado": "Status",
-    "acciones": "Actions"
-  },
-  "categorias": { "ARBORIO": "Arborio", "BASMATI": "Basmati", "IPSALA": "Ipsala", "JASMINE": "Jasmine", "KARACADAG": "Karacadag" },
-  "estados": { "ACTIVO": "Active", "INACTIVO": "Inactive" },
-  "formulario": {
-    "tituloNuevo": "New product",
-    "tituloEditar": "Edit product",
-    "guardar": "Save",
-    "volver": "Back to list",
-    "caracteres": "{{n}} / {{max}} characters"
+  "variedades": {
+    "ARBORIO": "Italian short, rounded grain variety with a lot of starch. It is the typical rice for risotto.",
+    "BASMATI": "Aromatic long, slender grain rice, grown mainly in India and Pakistan. It lengthens when cooked and stays loose.",
+    "IPSALA": "Variety from Turkey, grown in the Ipsala area (Edirne province), in the northwest of the country.",
+    "JASMINE": "Aromatic long grain rice from Thailand. When cooked it is soft and slightly sticky.",
+    "KARACADAG": "Local variety from southeastern Turkey, from the area of Mount Karacadağ (Diyarbakır)."
   },
   "clasificador": {
-    "titulo": "Suggest the variety from a photo",
-    "explicacion": "Upload a photo of one grain (JPEG or PNG, up to 5 MB). Classify it with the model you choose or compare the 5 models; the category is filled in with the suggestion and you can change it before saving.",
-    "elegir": "Choose photo",
-    "clasificando": "Classifying…",
-    "resultado": "Suggestion: {{categoria}} ({{confianza}} confidence)",
-    "conModelo": "Model: {{modelo}}, {{ms}} ms.",
-    "aplicada": "The category was filled in with the suggestion.",
-    "aplicadaReferencia": "The category was filled in with the reference model's prediction (highlighted row).",
-    "vistaPrevia": "Preview of the selected photo",
     "probabilidades": "Probability by variety",
-    "modo": "Classification mode",
-    "modoUno": "One model",
-    "modoComparar": "Compare the 5 models",
-    "modelo": "Model",
-    "modeloReferencia": "Reference model",
-    "ensamble": "Ensemble (weighted vote of the 5)",
-    "votoPonderado": "Weighted vote",
-    "recomendado": "recommended",
     "comparacionTitulo": "Prediction of each model",
     "consenso": "All models agree",
     "sinConsenso": "The models disagree",
+    "votoPonderado": "Weighted vote",
     "metricasTitulo": "Model metrics",
-    "metricasExplicacion": "Results on the project's 11,206 test images (notebook 04). The weight is each model's importance in the ensemble, computed on validation.",
-    "avisoPrueba": "Untrained test models are in use: predictions are not real.",
+    "metricasExplicacion": "Results on the project's 11,206 test photos. The weight is how much each model counts when all 5 vote together.",
+    "avisoPrueba": "Untrained test models are in use: the predictions are not real.",
     "col": {
       "modelo": "Model",
       "tipo": "Type",
@@ -86,15 +88,98 @@
       "f1": "F1 (test)",
       "parametros": "Parameters",
       "tamano": "Size",
-      "peso": "Ensemble weight"
+      "peso": "Vote weight"
     }
+  },
+  "login": {
+    "titulo": "Team access",
+    "explicacion": "Only for the team that manages the batch inventory. You do not need an account to classify photos.",
+    "usuario": "Username",
+    "contrasena": "Password",
+    "entrar": "Sign in",
+    "volver": "Back to classifying"
+  },
+  "productos": {
+    "titulo": "Rice batches",
+    "rolUSUARIO": "As an operator you can register and edit batches. Activating, deactivating and deleting batches is the administrator's job.",
+    "rolADMIN": "As an administrator you can also activate or deactivate batches and delete them.",
+    "nuevo": "New batch",
+    "buscar": "Search by name",
+    "todas": "All",
+    "todos": "All",
+    "vacio": "No batches match the filters.",
+    "editar": "Edit {{nombre}}",
+    "eliminar": "Delete {{nombre}}",
+    "cambiarEstado": "Batch {{nombre}} active",
+    "activado": "Batch activated",
+    "desactivado": "Batch deactivated",
+    "filasPorPagina": "Rows per page",
+    "rango": "{{desde}}–{{hasta}} of {{total}}",
+    "eliminado": "Batch deleted",
+    "guardado": "Batch saved",
+    "confirmarTitulo": "Delete batch?",
+    "confirmarTexto": "“{{nombre}}” will be deleted. This cannot be undone. If you only want to take it out of the inventory, deactivate it.",
+    "cancelar": "Cancel",
+    "confirmarEliminar": "Delete",
+    "cargando": "Loading batches",
+    "activar": "Activate {{nombre}}",
+    "desactivar": "Deactivate {{nombre}}"
+  },
+  "campos": {
+    "id": "Id",
+    "nombre": "Name",
+    "categoria": "Variety",
+    "descripcion": "Description",
+    "estado": "Status",
+    "acciones": "Actions"
+  },
+  "categorias": {
+    "ARBORIO": "Arborio",
+    "BASMATI": "Basmati",
+    "IPSALA": "Ipsala",
+    "JASMINE": "Jasmine",
+    "KARACADAG": "Karacadag"
+  },
+  "estados": {
+    "ACTIVO": "Active",
+    "INACTIVO": "Inactive"
+  },
+  "formulario": {
+    "tituloNuevo": "New batch",
+    "tituloEditar": "Edit batch",
+    "guardar": "Save",
+    "volver": "Back to batches",
+    "caracteres": "{{n}} / {{max}} characters",
+    "sugerida": "Variety suggested by the photo: {{variedad}} ({{confianza}} confidence). You can change it if it does not match.",
+    "sinSaber": "Not sure about the variety? Classify a photo of the grain",
+    "nuevoActivo": "The batch is active once saved."
+  },
+  "panel": {
+    "titulo": "Administrator dashboard",
+    "explicacion": "Summary of the inventory and of the public classifier usage.",
+    "actualizar": "Refresh",
+    "cargando": "Loading statistics",
+    "lotes": "Batches",
+    "lotesTotal": "Registered batches",
+    "lotesActivos": "Active",
+    "lotesInactivos": "Inactive",
+    "clasificacionesTotal": "Classifications made",
+    "clasificaciones7": "In the last 7 days",
+    "lotesPorVariedad": "Batches by variety",
+    "clasifPorDia": "Classifications per day (last 14 days)",
+    "clasifPorVariedad": "Suggested variety in classifications",
+    "porModelo": "Most used models",
+    "sinClasificaciones": "There are no classifications yet.",
+    "verTabla": "See the data as a table",
+    "dia": "Day",
+    "cantidad": "Count",
+    "comparacion": "Comparison of the 5"
   },
   "validacion": {
     "nombreObligatorio": "Name is required",
     "nombreMin": "Name must have at least {{min}} characters",
     "nombreMax": "Name cannot exceed {{max}} characters",
-    "categoriaObligatoria": "Select a category",
-    "estadoObligatorio": "Select a status",
+    "categoriaObligatoria": "Select a variety",
     "descripcionMax": "Description cannot exceed {{max}} characters",
     "usuarioObligatorio": "Username is required",
     "contrasenaObligatoria": "Password is required",
@@ -102,9 +187,12 @@
     "archivoTamano": "The photo cannot exceed 5 MB"
   },
   "errores": {
-    "red": "Could not reach the server. Check your connection and try again.",
+    "red": "Could not connect to the server. Check your connection and try again.",
     "sesionVencida": "Your session expired. Please sign in again.",
     "generico": "An unexpected error occurred."
   },
-  "noEncontrada": { "titulo": "Page not found", "volver": "Go home" }
+  "noEncontrada": {
+    "titulo": "Page not found",
+    "volver": "Go home"
+  }
 }

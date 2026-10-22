@@ -1,22 +1,23 @@
 /**
  * @file productos.spec.js
- * @description Pruebas de sistema del CRUD de productos por la interfaz (HU-02 a HU-05).
+ * @description Pruebas de sistema del inventario de lotes por la interfaz (HU-02 a HU-05).
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-18
+ * @actualizacion 2026-10-21
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * @version 1.0.0
  */
 import { expect, test } from '@playwright/test';
 import { buscar, crearProducto, entrar, unico } from './ayudas';
 
-test.describe('HU-02 a HU-05 Productos', () => {
-  test('CA-02.1 / CA-03.2 registrar un producto y encontrarlo con el filtro', async ({ page }) => {
+test.describe('HU-02 a HU-05 Lotes', () => {
+  test('CA-02.1 / CA-03.2 registrar un lote (queda activo) y encontrarlo con el filtro', async ({ page }) => {
     await entrar(page);
     const nombre = unico('E2E Lote');
     await crearProducto(page, { nombre, categoria: 'Basmati', descripcion: 'Creado por Playwright' });
     await buscar(page, nombre);
     await expect(page.getByTestId('producto')).toHaveCount(1);
     await expect(page.getByTestId('producto').first()).toContainText('Basmati');
+    await expect(page.getByTestId('producto').first()).toContainText('Activo');
   });
 
   test('CA-02.2 un nombre de 2 caracteres no se puede guardar', async ({ page }) => {
@@ -25,7 +26,7 @@ test.describe('HU-02 a HU-05 Productos', () => {
     await page.getByLabel('Nombre').fill('ab');
     await page.getByTestId('boton-guardar').click();
     await expect(page.getByText('El nombre debe tener al menos 3 caracteres')).toBeVisible();
-    await expect(page).toHaveURL(/\/productos\/nuevo$/);
+    await expect(page).toHaveURL(/\/equipo\/lotes\/nuevo$/);
   });
 
   test('CA-02.5 un nombre repetido muestra el conflicto de la API', async ({ page }) => {
@@ -52,7 +53,7 @@ test.describe('HU-02 a HU-05 Productos', () => {
     expect(dialogos).toBe(0);
   });
 
-  test('CA-04.1 editar un producto cambia sus datos', async ({ page }) => {
+  test('CA-04.1 editar un lote cambia sus datos', async ({ page }) => {
     await entrar(page);
     const nombre = unico('E2E Editar');
     await crearProducto(page, { nombre });
@@ -79,7 +80,7 @@ test.describe('HU-02 a HU-05 Productos', () => {
     const dialogo = page.getByRole('dialog');
     await expect(dialogo).toContainText(nombre);
     await dialogo.getByTestId('confirmar-eliminar').click();
-    await expect(page.getByText('Producto eliminado')).toBeVisible();
+    await expect(page.getByText('Lote eliminado')).toBeVisible();
     await expect(page.getByTestId('sin-productos')).toBeVisible();
   });
 });

@@ -4,9 +4,9 @@
  *              CA-02.4) para avisar al usuario antes de enviar; la API vuelve a validar porque
  *              nunca se confía solo en el cliente.
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-18
+ * @actualizacion 2026-10-21
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
- * @version 1.0.0
+ * @version 1.1.0
  */
 import * as yup from 'yup';
 
@@ -28,7 +28,6 @@ export const esquemaProducto = (t) => yup.object({
     .max(LIMITES.nombreMax, t('validacion.nombreMax', { max: LIMITES.nombreMax })),
   categoria: yup.string().oneOf(CATEGORIAS, t('validacion.categoriaObligatoria')).required(t('validacion.categoriaObligatoria')),
   descripcion: yup.string().max(LIMITES.descripcionMax, t('validacion.descripcionMax', { max: LIMITES.descripcionMax })),
-  estado: yup.string().oneOf(ESTADOS, t('validacion.estadoObligatorio')).required(t('validacion.estadoObligatorio')),
 });
 
 /**

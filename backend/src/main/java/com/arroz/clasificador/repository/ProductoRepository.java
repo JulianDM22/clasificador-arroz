@@ -3,11 +3,13 @@
  * Descripción: Acceso a datos de productos con Spring Data JPA. Las consultas usan parámetros
  *              enlazados, lo que impide la inyección SQL (criterio CA-02.6).
  * Fecha de creación: 2026-10-17
- * Última actualización: 2026-10-17
+ * Última actualización: 2026-10-21
  * Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
- * Versión: 1.0.0
+ * Versión: 1.1.0
  */
 package com.arroz.clasificador.repository;
+
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +42,18 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
      * @return {@code true} si otro producto lo usa
      */
     boolean existsByNombreIgnoreCaseAndIdNot(String nombre, Long id);
+
+    /**
+     * @param estado estado a contar
+     * @return cantidad de lotes en ese estado
+     */
+    long countByEstado(EstadoProducto estado);
+
+    /**
+     * @return filas [variedad, cantidad de lotes]
+     */
+    @Query("SELECT p.categoria, COUNT(p) FROM Producto p GROUP BY p.categoria")
+    List<Object[]> contarPorCategoria();
 
     /**
      * Busca con filtros opcionales: un filtro nulo no restringe.

@@ -3,10 +3,11 @@
  * Descripción: Valida la imagen recibida (tamaño y contenido real JPEG o PNG) y consulta al
  *              servicio de inferencia: clasificar con el modelo elegido o con el ensamble,
  *              comparar los 5 modelos y obtener el catálogo de modelos con sus métricas (HU-06).
+ *              Registra cada clasificación (sin la foto) para el panel del administrador (HU-10).
  * Fecha de creación: 2026-10-17
- * Última actualización: 2026-10-18
+ * Última actualización: 2026-10-21
  * Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
- * Versión: 1.1.0
+ * Versión: 1.2.0
  */
 package com.arroz.clasificador.service;
 
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.util.regex.Pattern;
 
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -30,6 +32,9 @@ import com.arroz.clasificador.exception.ArchivoGrandeException;
 import com.arroz.clasificador.exception.ArchivoInvalidoException;
 import com.arroz.clasificador.exception.ModeloDesconocidoException;
 import com.arroz.clasificador.exception.ServicioClasificacionException;
+import com.arroz.clasificador.model.Clasificacion;
+import com.arroz.clasificador.model.TipoClasificacion;
+import com.arroz.clasificador.repository.ClasificacionRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,12 +54,15 @@ public class ClasificacionService {
     private static final byte[] FIRMA_PNG = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
 
     private final RestClient cliente;
+    private final ClasificacionRepository registro;
 
     /**
      * @param inferenciaRestClient cliente HTTP configurado con la URL del servicio de inferencia
+     * @param registro             registro de clasificaciones para las estadísticas
      */
-    public ClasificacionService(RestClient inferenciaRestClient) {
+    public ClasificacionService(RestClient inferenciaRestClient, ClasificacionRepository registro) {
         this.cliente = inferenciaRestClient;
+        this.registro = registro;
     }
 
     /**
@@ -99,6 +107,7 @@ public class ClasificacionService {
             throw new ServicioClasificacionException(new IllegalStateException("Respuesta vacía"));
         }
         log.info("Clasificación con {}: {} ({})", r.modelo(), r.categoria(), r.confianza());
+        registrar(TipoClasificacion.UN_MODELO, r);
         return r;
     }
 
@@ -119,7 +128,21 @@ public class ClasificacionService {
         if (r == null || r.modelos() == null || r.modelos().isEmpty() || r.ensamble() == null) {
             throw new ServicioClasificacionException(new IllegalStateException("Respuesta vacía"));
         }
+        registrar(TipoClasificacion.COMPARACION, r.ensamble());
         return r;
+    }
+
+    /**
+     * Guarda la clasificación para las estadísticas. Si la base de datos falla, la clasificación
+     * igual se entrega al usuario: las estadísticas no deben impedir clasificar.
+     */
+    private void registrar(TipoClasificacion tipo, ClasificacionResponse r) {
+        try {
+            registro.save(Clasificacion.builder().tipo(tipo).modelo(r.modelo())
+                    .categoria(r.categoria()).confianza(r.confianza()).build());
+        } catch (DataAccessException e) {
+            log.warn("No se pudo registrar la clasificación: {}", e.getMessage());
+        }
     }
 
     /**

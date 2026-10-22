@@ -1,11 +1,12 @@
 /*
  * Nombre: ProductoService.java
  * Descripción: Reglas de negocio del CRUD de productos: unicidad del nombre, límites de
- *              paginación y existencia antes de actualizar o eliminar (HU-02 a HU-05).
+ *              paginación y existencia antes de actualizar o eliminar (HU-02 a HU-05), y cambio
+ *              de estado de un lote (HU-10).
  * Fecha de creación: 2026-10-17
- * Última actualización: 2026-10-17
+ * Última actualización: 2026-10-21
  * Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
- * Versión: 1.0.0
+ * Versión: 1.1.0
  */
 package com.arroz.clasificador.service;
 
@@ -116,6 +117,23 @@ public class ProductoService {
         ProductoMapper.actualizar(producto, req);
         Producto guardado = repositorio.saveAndFlush(producto);
         log.info("Producto actualizado id={}", id);
+        return ProductoMapper.aRespuesta(guardado);
+    }
+
+    /**
+     * Activa o desactiva un lote (solo ADMIN, CA-10.2).
+     *
+     * @param id     identificador
+     * @param estado nuevo estado
+     * @return lote actualizado
+     * @throws RecursoNoEncontradoException si no existe
+     */
+    @Transactional
+    public ProductoResponse cambiarEstado(Long id, EstadoProducto estado) {
+        Producto producto = buscar(id);
+        producto.setEstado(estado);
+        Producto guardado = repositorio.saveAndFlush(producto);
+        log.info("Producto id={} ahora {}", id, estado);
         return ProductoMapper.aRespuesta(guardado);
     }
 

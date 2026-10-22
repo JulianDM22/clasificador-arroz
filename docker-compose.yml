@@ -5,7 +5,7 @@
 #              Uso: docker compose up -d --build
 #                   docker compose --profile monitoreo up -d
 # Fecha de creación: 2026-10-18
-# Última actualización: 2026-10-18
+# Última actualización: 2026-10-21
 # Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
 # Versión: 1.0.0
 
@@ -52,6 +52,8 @@ services:
       APP_INFERENCIA_API_KEY: ${INFERENCIA_API_KEY:-clave-local}
       APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD:-Admin123*}
       APP_USUARIO_PASSWORD: ${APP_USUARIO_PASSWORD:-Operario123*}
+      # Las pruebas de sistema clasifican muchas fotos desde la misma IP; en producción queda en 20.
+      APP_LIMITE_CLASIFICACIONES: ${APP_LIMITE_CLASIFICACIONES:-300}
     ports: ["8080:8080"]
     deploy:
       resources:

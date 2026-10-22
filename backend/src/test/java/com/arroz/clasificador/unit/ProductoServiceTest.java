@@ -3,7 +3,7 @@
  * Descripción: Pruebas unitarias del servicio de productos con Mockito (el repositorio se
  *              simula). Cubren reglas de negocio y valores límite de paginación.
  * Fecha de creación: 2026-10-17
- * Última actualización: 2026-10-17
+ * Última actualización: 2026-10-21
  * Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * Versión: 1.0.0
  */
@@ -58,7 +58,7 @@ class ProductoServiceTest {
     private ProductoService servicio;
 
     private static ProductoRequest peticion(String nombre) {
-        return new ProductoRequest(nombre, CategoriaArroz.BASMATI, "desc", EstadoProducto.ACTIVO);
+        return new ProductoRequest(nombre, CategoriaArroz.BASMATI, "desc");
     }
 
     private static Producto producto(Long id, String nombre) {
@@ -127,19 +127,19 @@ class ProductoServiceTest {
     class Actualizar {
 
         @Test
-        @DisplayName("CA-04.1 copia los datos nuevos y guarda")
+        @DisplayName("CA-04.1 copia los datos nuevos y guarda, sin cambiar el estado")
         void actualiza() {
             Producto existente = producto(3L, "Viejo");
             when(repositorio.findById(3L)).thenReturn(Optional.of(existente));
             when(repositorio.existsByNombreIgnoreCaseAndIdNot("Nuevo", 3L)).thenReturn(false);
             when(repositorio.saveAndFlush(existente)).thenReturn(existente);
 
-            ProductoRequest req = new ProductoRequest("Nuevo", CategoriaArroz.IPSALA, null, EstadoProducto.INACTIVO);
+            ProductoRequest req = new ProductoRequest("Nuevo", CategoriaArroz.IPSALA, null);
             ProductoResponse r = servicio.actualizar(3L, req);
 
             assertThat(r.nombre()).isEqualTo("Nuevo");
             assertThat(r.categoria()).isEqualTo(CategoriaArroz.IPSALA);
-            assertThat(r.estado()).isEqualTo(EstadoProducto.INACTIVO);
+            assertThat(r.estado()).isEqualTo(EstadoProducto.ACTIVO);
             assertThat(r.descripcion()).isNull();
         }
 
@@ -159,6 +159,34 @@ class ProductoServiceTest {
             when(repositorio.existsByNombreIgnoreCaseAndIdNot("Otro", 3L)).thenReturn(true);
             assertThatThrownBy(() -> servicio.actualizar(3L, peticion("Otro")))
                     .isInstanceOf(NombreDuplicadoException.class);
+            verify(repositorio, never()).saveAndFlush(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("cambiar estado")
+    class CambiarEstado {
+
+        @Test
+        @DisplayName("CA-10.2 guarda el nuevo estado y lo devuelve")
+        void cambia() {
+            Producto p = producto(6L, "Lote");
+            when(repositorio.findById(6L)).thenReturn(Optional.of(p));
+            when(repositorio.saveAndFlush(p)).thenReturn(p);
+
+            ProductoResponse r = servicio.cambiarEstado(6L, EstadoProducto.INACTIVO);
+
+            assertThat(r.estado()).isEqualTo(EstadoProducto.INACTIVO);
+            assertThat(p.getEstado()).isEqualTo(EstadoProducto.INACTIVO);
+            verify(repositorio).saveAndFlush(p);
+        }
+
+        @Test
+        @DisplayName("CA-10.2 lanza 404 si el lote no existe")
+        void inexistente() {
+            when(repositorio.findById(6L)).thenReturn(Optional.empty());
+            assertThatThrownBy(() -> servicio.cambiarEstado(6L, EstadoProducto.ACTIVO))
+                    .isInstanceOf(RecursoNoEncontradoException.class);
             verify(repositorio, never()).saveAndFlush(any());
         }
     }

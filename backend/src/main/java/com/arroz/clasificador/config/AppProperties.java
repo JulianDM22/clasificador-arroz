@@ -1,9 +1,9 @@
 /*
  * Nombre: AppProperties.java
  * Descripción: Propiedades propias de la aplicación (JWT, CORS, servicio de inferencia y
- *              contraseñas iniciales), leídas del prefijo "app" de application.yml.
+ *              seguridad), leídas del prefijo "app" de application.yml.
  * Fecha de creación: 2026-10-17
- * Última actualización: 2026-10-17
+ * Última actualización: 2026-10-21
  * Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * Versión: 1.0.0
  */
@@ -46,9 +46,10 @@ public record AppProperties(Jwt jwt, Cors cors, Inferencia inferencia, Seguridad
     }
 
     /**
-     * @param adminPassword   contraseña inicial del usuario "admin"
-     * @param usuarioPassword contraseña inicial del usuario "operario"
+     * @param adminPassword                  contraseña inicial del usuario "admin"
+     * @param usuarioPassword                contraseña inicial del usuario "operario"
+     * @param limiteClasificacionesPorMinuto clasificaciones permitidas por IP y minuto (0 = sin límite)
      */
-    public record Seguridad(String adminPassword, String usuarioPassword) {
+    public record Seguridad(String adminPassword, String usuarioPassword, int limiteClasificacionesPorMinuto) {
     }
 }

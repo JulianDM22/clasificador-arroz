@@ -3,7 +3,7 @@
  * Descripción: Pruebas de integración del endpoint de clasificación con un servicio de
  *              inferencia falso (servidor HTTP embebido) y con el servicio caído (HU-06).
  * Fecha de creación: 2026-10-17
- * Última actualización: 2026-10-17
+ * Última actualización: 2026-10-21
  * Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * Versión: 1.0.0
  */
@@ -93,6 +93,9 @@ class ClasificacionIntegrationTest {
     @DisplayName("con el servicio de inferencia disponible")
     class Disponible extends IntegracionBase {
 
+        @org.springframework.beans.factory.annotation.Autowired
+        com.arroz.clasificador.repository.ClasificacionRepository registro;
+
         @DynamicPropertySource
         static void url(DynamicPropertyRegistry r) {
             r.add("app.inferencia.url", () -> "http://localhost:" + INFERENCIA_FALSA.getAddress().getPort());
@@ -100,11 +103,10 @@ class ClasificacionIntegrationTest {
         }
 
         @Test
-        @DisplayName("CA-06.1 una foto JPEG devuelve la variedad sugerida (el back-end envía la clave X-API-Key)")
+        @DisplayName("CA-06.1 / CA-06.8 cualquier visitante, sin iniciar sesión, clasifica una foto (el back-end envía X-API-Key)")
         void clasifica() throws Exception {
             mvc.perform(multipart("/api/v1/clasificaciones")
-                            .file(new MockMultipartFile("archivo", "grano.jpg", "image/jpeg", JPEG))
-                            .header("Authorization", operario()))
+                            .file(new MockMultipartFile("archivo", "grano.jpg", "image/jpeg", JPEG)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.categoria").value("BASMATI"))
                     .andExpect(jsonPath("$.confianza").value(0.98))
@@ -159,10 +161,42 @@ class ClasificacionIntegrationTest {
         }
 
         @Test
-        @DisplayName("CA-01.3 el catálogo de modelos exige sesión")
+        @DisplayName("CA-06.8 el catálogo de modelos es público")
         void catalogoSinToken() throws Exception {
             mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/modelos"))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.modelo_por_defecto").value("resnet50v2"));
+        }
+
+        @Test
+        @DisplayName("CA-10.1 cada clasificación queda registrada y se ve en las estadísticas del admin")
+        void quedaRegistrada() throws Exception {
+            long antes = registro.count();
+            mvc.perform(multipart("/api/v1/clasificaciones")
+                            .file(new MockMultipartFile("archivo", "grano.jpg", "image/jpeg", JPEG))
+                            .param("modelo", "deit_s"))
+                    .andExpect(status().isOk());
+            mvc.perform(multipart("/api/v1/clasificaciones/comparacion")
+                            .file(new MockMultipartFile("archivo", "grano.jpg", "image/jpeg", JPEG)))
+                    .andExpect(status().isOk());
+            org.assertj.core.api.Assertions.assertThat(registro.count()).isEqualTo(antes + 2);
+            mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/estadisticas").header("Authorization", admin()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.clasificaciones.total").value((int) antes + 2))
+                    .andExpect(jsonPath("$.clasificaciones.porModelo.deit_s").isNumber())
+                    .andExpect(jsonPath("$.clasificaciones.porModelo.ensamble").isNumber())
+                    .andExpect(jsonPath("$.clasificaciones.porVariedad.BASMATI").isNumber())
+                    .andExpect(jsonPath("$.clasificaciones.porDia[13].cantidad").isNumber());
+        }
+
+        @Test
+        @DisplayName("CA-10.1 una clasificación fallida no se registra")
+        void fallidaNoSeRegistra() throws Exception {
+            long antes = registro.count();
+            mvc.perform(multipart("/api/v1/clasificaciones")
+                            .file(new MockMultipartFile("archivo", "virus.jpg", "image/jpeg", "MZ".getBytes())))
+                    .andExpect(status().isBadRequest());
+            org.assertj.core.api.Assertions.assertThat(registro.count()).isEqualTo(antes);
         }
 
         @Test
@@ -191,6 +225,59 @@ class ClasificacionIntegrationTest {
                             .file(new MockMultipartFile("archivo", "grande.jpg", "image/jpeg", grande))
                             .header("Authorization", operario()))
                     .andExpect(status().isPayloadTooLarge());
+        }
+    }
+
+    @Nested
+    @DisplayName("con límite de 3 clasificaciones por minuto")
+    @TestPropertySource(properties = "app.seguridad.limite-clasificaciones-por-minuto=3")
+    class Limite extends IntegracionBase {
+
+        @DynamicPropertySource
+        static void url(DynamicPropertyRegistry r) {
+            r.add("app.inferencia.url", () -> "http://localhost:" + INFERENCIA_FALSA.getAddress().getPort());
+            r.add("app.inferencia.api-key", () -> CLAVE);
+        }
+
+        @Test
+        @DisplayName("CA-06.9 al superar el límite por IP responde 429 con Retry-After; otra IP no se afecta")
+        void limitePorIp() throws Exception {
+            for (int i = 0; i < 3; i++) {
+                mvc.perform(multipart("/api/v1/clasificaciones")
+                                .file(new MockMultipartFile("archivo", "grano.jpg", "image/jpeg", JPEG))
+                                .with(ip("203.0.113.7")))
+                        .andExpect(status().isOk());
+            }
+            mvc.perform(multipart("/api/v1/clasificaciones/comparacion")
+                            .file(new MockMultipartFile("archivo", "grano.jpg", "image/jpeg", JPEG))
+                            .with(ip("203.0.113.7")))
+                    .andExpect(status().isTooManyRequests())
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                            .exists("Retry-After"))
+                    .andExpect(jsonPath("$.title").value("Demasiadas solicitudes"))
+                    .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.startsWith(
+                            "Superó el límite de 3 clasificaciones por minuto")));
+            mvc.perform(multipart("/api/v1/clasificaciones")
+                            .file(new MockMultipartFile("archivo", "grano.jpg", "image/jpeg", JPEG))
+                            .with(ip("198.51.100.20")))
+                    .andExpect(status().isOk());
+        }
+
+        @Test
+        @DisplayName("CA-06.9 el límite no aplica al inventario del equipo")
+        void inventarioSinLimite() throws Exception {
+            String token = operario();
+            for (int i = 0; i < 5; i++) {
+                mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/productos").header("Authorization", token).with(ip("192.0.2.50")))
+                        .andExpect(status().isOk());
+            }
+        }
+
+        private static org.springframework.test.web.servlet.request.RequestPostProcessor ip(String direccion) {
+            return peticion -> {
+                peticion.setRemoteAddr(direccion);
+                return peticion;
+            };
         }
     }
 

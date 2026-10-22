@@ -4,12 +4,13 @@
  *              mensajes de error y de validación (HU-07), y cliente HTTP hacia el servicio de
  *              inferencia con tiempos de espera.
  * Fecha de creación: 2026-10-17
- * Última actualización: 2026-10-17
+ * Última actualización: 2026-10-21
  * Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * Versión: 1.0.0
  */
 package com.arroz.clasificador.config;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
@@ -31,6 +32,14 @@ public class WebConfig {
 
     /** Idioma por defecto de la API. */
     public static final Locale ESPANOL = Locale.forLanguageTag("es");
+
+    /**
+     * @return reloj del sistema en UTC (las pruebas lo reemplazan para controlar el tiempo)
+     */
+    @Bean
+    public Clock reloj() {
+        return Clock.systemUTC();
+    }
 
     /**
      * @return resolvedor que lee Accept-Language y solo admite español e inglés

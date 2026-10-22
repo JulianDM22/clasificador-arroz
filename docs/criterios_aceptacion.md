@@ -3,28 +3,32 @@ Nombre: criterios_aceptacion.md
 Descripción: Historias de usuario y criterios de aceptación (Dado/Cuando/Entonces) del sistema
              clasificador de arroz. Cada prueba del proyecto referencia el código de su criterio.
 Fecha de creación: 2026-10-17
-Última actualización: 2026-10-17
+Última actualización: 2026-10-21
 Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
-Versión: 1.0.0
+Versión: 2.0.0
 -->
 
 # Historias de usuario y criterios de aceptación
 
-**Contexto.** Una cooperativa arrocera registra lotes de arroz (productos) y quiere saber su
-variedad a partir de una foto del grano. El sistema expone una API REST (Spring Boot) y una
-interfaz web (React). La clasificación la hace el modelo ResNet50V2 entrenado en el proyecto
-(99,91 % de exactitud en test).
+**Contexto.** Cualquier persona puede entrar a la página y saber la variedad de un grano de arroz
+a partir de una foto, sin crear cuenta. Además, una cooperativa arrocera lleva el inventario de
+sus lotes (productos) en un área del equipo, con acceso restringido. El sistema expone una API
+REST (Spring Boot) y una interfaz web (React). La clasificación la hacen los 5 modelos
+entrenados en el proyecto; por defecto, ResNet50V2 (99,91 % de exactitud en test).
 
 **Roles.**
-- **USUARIO** (operario): consulta, registra y actualiza productos; clasifica fotos.
-- **ADMIN** (coordinador): todo lo anterior y además elimina productos.
+- **Visitante** (sin cuenta): clasifica fotos, elige el modelo y compara los 5.
+- **USUARIO** (operario): además consulta, registra y actualiza lotes, y puede registrar como
+  lote el resultado de una clasificación.
+- **ADMIN** (coordinador): todo lo anterior y además activa o desactiva lotes, los elimina y ve
+  el panel con las estadísticas del inventario y del uso del clasificador.
 
 **Entidad Producto.** `id`, `nombre`, `categoria` (variedad: ARBORIO, BASMATI, IPSALA,
 JASMINE, KARACADAG), `descripcion`, `estado` (ACTIVO, INACTIVO). Formato de intercambio: JSON.
 
 Cada criterio tiene un código `CA-xx.y`. Las pruebas automáticas llevan ese código en su nombre
 (`@DisplayName` en JUnit, título en Playwright y Selenium), así se puede rastrear qué prueba
-verifica cada criterio. La matriz de trazabilidad está en `docs/plan_pruebas.md`.
+verifica cada criterio. La matriz de trazabilidad está en `docs/casos_de_prueba.md`.
 
 ---
 
@@ -37,7 +41,7 @@ solo a las funciones de mi rol.
 |---|---|
 | CA-01.1 | **Dado** un usuario registrado, **cuando** envía usuario y contraseña correctos a `POST /api/v1/auth/login`, **entonces** recibe `200` y un token JWT con su rol y una vigencia de 60 minutos. |
 | CA-01.2 | **Dado** un usuario, **cuando** envía una contraseña incorrecta o un usuario inexistente, **entonces** recibe `401` con un mensaje que no revela cuál de los dos datos falló. |
-| CA-01.3 | **Dado** cualquier endpoint de productos o clasificación, **cuando** se llama sin token, con un token alterado o vencido, **entonces** responde `401`. |
+| CA-01.3 | **Dado** cualquier endpoint de productos o de estadísticas, **cuando** se llama sin token, con un token alterado o vencido, **entonces** responde `401`; en la interfaz, las páginas del equipo llevan al acceso del equipo. |
 | CA-01.4 | **Dado** un usuario con rol USUARIO, **cuando** intenta eliminar un producto, **entonces** recibe `403`. |
 | CA-01.5 | **Dado** el formulario de inicio de sesión, **cuando** se dejan campos vacíos, **entonces** se muestran mensajes de validación y no se envía la petición. |
 
@@ -50,7 +54,7 @@ solo a las funciones de mi rol.
 | CA-02.1 | **Dado** un usuario autenticado, **cuando** envía un producto válido a `POST /api/v1/productos`, **entonces** recibe `201`, el producto creado con su `id` y la cabecera `Location`. |
 | CA-02.2 | **Dado** un producto, **cuando** el `nombre` está vacío, tiene menos de 3 o más de 100 caracteres, **entonces** recibe `400` con el error asociado al campo `nombre`. Límites: 2 y 101 caracteres fallan; 3 y 100 son válidos. |
 | CA-02.3 | **Dado** un producto, **cuando** la `descripcion` supera 500 caracteres, **entonces** recibe `400`. 500 caracteres es válido. |
-| CA-02.4 | **Dado** un producto, **cuando** `categoria` o `estado` faltan o no son valores permitidos, **entonces** recibe `400`. |
+| CA-02.4 | **Dado** un producto, **cuando** `categoria` falta o no es un valor permitido, **entonces** recibe `400`. |
 | CA-02.5 | **Dado** un producto con un `nombre` que ya existe (sin distinguir mayúsculas), **cuando** se intenta registrar, **entonces** recibe `409`. |
 | CA-02.6 | **Dado** un `nombre` o `descripcion` con texto como `<script>` o `' OR 1=1 --`, **cuando** se registra, **entonces** se guarda como texto literal, sin ejecutarse ni alterar la consulta, y la interfaz lo muestra escapado. |
 
@@ -87,17 +91,19 @@ solo a las funciones de mi rol.
 
 ## HU-06 · Clasificar variedad por foto
 
-*Como* USUARIO *quiero* subir la foto de un grano *para* que el sistema me sugiera su variedad al registrar el producto, eligiendo el modelo o comparando los 5 modelos del proyecto.
+*Como* visitante *quiero* subir la foto de un grano, sin crear cuenta, *para* saber qué variedad de arroz es; si quiero, elijo el modelo o comparo los 5 modelos del proyecto. *Como* USUARIO *quiero* registrar ese resultado como lote.
 
 | Código | Criterio |
 |---|---|
-| CA-06.1 | **Dado** un usuario autenticado, **cuando** envía una imagen JPEG o PNG a `POST /api/v1/clasificaciones`, **entonces** recibe `200` con la `categoria` sugerida, su `confianza` (0 a 1) y la probabilidad de cada variedad. |
+| CA-06.1 | **Dado** cualquier persona, **cuando** envía una imagen JPEG o PNG a `POST /api/v1/clasificaciones`, **entonces** recibe `200` con la `categoria` sugerida, su `confianza` (0 a 1) y la probabilidad de cada variedad. La interfaz muestra la variedad, la seguridad con un mensaje según su nivel (≥ 90 % muy seguro, ≥ 60 % bastante seguro, menos: "prueba con otra foto") y una descripción de la variedad. |
 | CA-06.2 | **Dado** un archivo que no es JPEG ni PNG (se verifica el contenido real, no solo la extensión) o un archivo vacío, **cuando** se envía, **entonces** recibe `400`. |
 | CA-06.3 | **Dado** un archivo de más de 5 MB, **cuando** se envía, **entonces** recibe `413`. |
 | CA-06.4 | **Dado** que el servicio de inferencia no responde, **cuando** se pide una clasificación, **entonces** recibe `503` con un mensaje claro y el resto del sistema sigue funcionando. |
-| CA-06.5 | **Dado** el formulario de producto en la interfaz, **cuando** se clasifica una foto, **entonces** la categoría sugerida se precarga en el campo `categoria` y el usuario puede cambiarla antes de guardar. |
+| CA-06.5 | **Dado** un integrante del equipo con sesión iniciada, **cuando** clasifica una foto y pulsa "Registrar como lote", **entonces** se abre el formulario con la variedad sugerida precargada (y su seguridad a la vista) y puede cambiarla antes de guardar. |
 | CA-06.6 | **Dado** el catálogo de los 5 modelos (CNN propia, EfficientNetB0, ResNet50V2, ViT-B/16, DeiT-S) y el ensamble, **cuando** el usuario elige uno y clasifica, **entonces** la predicción la hace ese modelo y se informa cuál fue y cuánto tardó. Sin elección se usa ResNet50V2. Un modelo inexistente responde `400`. |
-| CA-06.7 | **Dado** el modo "Comparar los 5 modelos", **cuando** se clasifica una foto, **entonces** se muestra la predicción, la confianza y el tiempo de cada modelo y del ensamble, si todos coinciden, y las métricas de test de cada modelo (exactitud, F1, tamaño y peso en el ensamble). |
+| CA-06.7 | **Dado** una foto ya clasificada, **cuando** se pulsa "Comparar los 5 modelos con esta foto" en las opciones avanzadas, **entonces** se muestra la predicción, la confianza y el tiempo de cada modelo y del ensamble, si todos coinciden, y las métricas de test de cada modelo (exactitud, tamaño y peso en el ensamble). |
+| CA-06.8 | **Dado** un visitante sin cuenta, **cuando** entra a la página principal, **entonces** ve para qué sirve y los pasos de uso, puede clasificar su foto o una de las 5 fotos de ejemplo, y el catálogo de modelos (`GET /api/v1/modelos`) es público. |
+| CA-06.9 | **Dado** que la clasificación es pública, **cuando** una misma dirección IP supera el límite de clasificaciones por minuto (20 en producción), **entonces** recibe `429` con la cabecera `Retry-After` y un mensaje claro; el límite no afecta a otras IP ni al inventario. |
 
 ## HU-07 · Idioma
 
@@ -124,3 +130,14 @@ solo a las funciones de mi rol.
 | CA-09.1 | **Dado** 50 usuarios simultáneos consultando y registrando productos durante 2 minutos, **entonces** el percentil 95 del tiempo de respuesta es menor a 500 ms y la tasa de error menor al 1 %. |
 | CA-09.2 | **Dado** el sistema desplegado, **cuando** se consulta `/actuator/health`, **entonces** responde `UP` e incluye el estado de la base de datos. |
 | CA-09.3 | **Dado** el servicio de clasificación, **cuando** recibe una imagen, **entonces** responde en menos de 1 s (sin contar el arranque en frío del plan gratuito). |
+
+## HU-10 · Administración
+
+*Como* ADMIN *quiero* controlar qué lotes están activos y ver cómo se usa el sistema *para*
+administrar el inventario y el clasificador.
+
+| Código | Criterio |
+|---|---|
+| CA-10.1 | **Dado** un ADMIN, **cuando** abre el panel (`GET /api/v1/estadisticas`), **entonces** ve el total de lotes, activos e inactivos, lotes por variedad, y las clasificaciones hechas (total, últimos 7 días, por día en los últimos 14, por variedad sugerida y por modelo). Cada clasificación exitosa se registra sin guardar la foto; una fallida no. Un USUARIO recibe `403` y en la interfaz no ve el panel. |
+| CA-10.2 | **Dado** un lote, **cuando** el ADMIN lo activa o desactiva (`PATCH /api/v1/productos/{id}/estado`), **entonces** el estado cambia; un USUARIO recibe `403` y en la interfaz no ve el interruptor. Un estado inválido responde `400` y un lote inexistente `404`. Editar un lote (`PUT`) no cambia su estado. |
+| CA-10.3 | **Dado** un lote nuevo, **cuando** se registra, **entonces** queda ACTIVO aunque la petición diga otro estado. |

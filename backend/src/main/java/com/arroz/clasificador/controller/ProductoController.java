@@ -2,9 +2,9 @@
  * Nombre: ProductoController.java
  * Descripción: Endpoints REST del CRUD de productos en JSON (HU-02 a HU-05).
  * Fecha de creación: 2026-10-17
- * Última actualización: 2026-10-17
+ * Última actualización: 2026-10-21
  * Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
- * Versión: 1.0.0
+ * Versión: 1.1.0
  */
 package com.arroz.clasificador.controller;
 
@@ -13,6 +13,7 @@ import java.net.URI;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.arroz.clasificador.dto.EstadoRequest;
 import com.arroz.clasificador.dto.PaginaResponse;
 import com.arroz.clasificador.dto.ProductoRequest;
 import com.arroz.clasificador.dto.ProductoResponse;
@@ -117,6 +119,23 @@ public class ProductoController {
     @ApiResponse(responseCode = "409", description = "Nombre duplicado")
     public ProductoResponse actualizar(@PathVariable Long id, @Valid @RequestBody ProductoRequest req) {
         return servicio.actualizar(id, req);
+    }
+
+    /**
+     * Activa o desactiva un lote (solo ADMIN).
+     *
+     * @param id  identificador
+     * @param req nuevo estado
+     * @return lote actualizado
+     */
+    @PatchMapping("/{id}/estado")
+    @Operation(summary = "Activar o desactivar un lote", description = "Requiere rol ADMIN.")
+    @ApiResponse(responseCode = "200", description = "Estado cambiado")
+    @ApiResponse(responseCode = "400", description = "Estado inválido")
+    @ApiResponse(responseCode = "403", description = "El usuario no es ADMIN")
+    @ApiResponse(responseCode = "404", description = "No existe")
+    public ProductoResponse cambiarEstado(@PathVariable Long id, @Valid @RequestBody EstadoRequest req) {
+        return servicio.cambiarEstado(id, req.estado());
     }
 
     /**

@@ -1,12 +1,12 @@
 /**
  * @file cliente.js
- * @description Cliente HTTP (axios) de la API REST. Agrega el token JWT y el idioma activo a
- *              cada petición, y avisa a la aplicación cuando el servidor responde 401 para cerrar
- *              la sesión.
+ * @description Cliente HTTP (axios) de la API REST. Agrega el token JWT (salvo en la
+ *              clasificación, que es pública) y el idioma activo a cada petición, y avisa a la
+ *              aplicación cuando el servidor responde 401 para cerrar la sesión.
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-18
+ * @actualizacion 2026-10-21
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
- * @version 1.0.0
+ * @version 1.1.0
  */
 import axios from 'axios';
 import i18n from '../i18n';
@@ -20,9 +20,13 @@ export const EVENTO_SESION_VENCIDA = 'clasificador:sesion-vencida';
 
 const cliente = axios.create({ baseURL: `${URL_API}/api/v1`, timeout: 90000 });
 
+/** Rutas públicas: no llevan token, así un token vencido no impide clasificar. */
+const PUBLICAS = ['/clasificaciones', '/modelos'];
+
 cliente.interceptors.request.use((config) => {
   const sesion = leerSesion();
-  if (sesion?.token) config.headers.Authorization = `Bearer ${sesion.token}`;
+  const publica = PUBLICAS.some((r) => config.url?.startsWith(r));
+  if (sesion?.token && !publica) config.headers.Authorization = `Bearer ${sesion.token}`;
   config.headers['Accept-Language'] = i18n.resolvedLanguage || 'es';
   return config;
 });

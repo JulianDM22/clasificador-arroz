@@ -1,25 +1,26 @@
 /**
  * @file PaginaProductos.jsx
- * @description Listado de productos con filtros (categoría, estado y texto), paginación y
+ * @description Inventario de lotes con filtros (variedad, estado y texto), paginación y
  *              acciones. En pantallas angostas usa tarjetas en lugar de tabla para evitar el
- *              desplazamiento horizontal (CA-08.1). Solo ADMIN ve el botón de eliminar.
+ *              desplazamiento horizontal (CA-08.1). El operario registra y edita; solo ADMIN ve
+ *              el interruptor para activar o desactivar un lote y el botón de eliminar (CA-10.2).
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-18
+ * @actualizacion 2026-10-21
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
- * @version 1.0.0
+ * @version 2.0.0
  */
 import { useCallback, useEffect, useState } from 'react';
 import {
-  Alert, Box, Button, Card, CardActions, CardContent, Chip, IconButton, LinearProgress, MenuItem, Paper, Snackbar,
-  Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TextField, Tooltip, Typography,
-  useMediaQuery,
+  Alert, Box, Button, Card, CardActions, CardContent, Chip, IconButton, LinearProgress, MenuItem, Paper,
+  Snackbar, Stack, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TextField,
+  Tooltip, Typography, useMediaQuery,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
-import { eliminarProducto, listarProductos } from '../api/servicios';
+import { cambiarEstadoProducto, eliminarProducto, listarProductos } from '../api/servicios';
 import { mensajeError } from '../api/cliente';
 import { useAuth } from '../auth/AuthContexto';
 import { CATEGORIAS, ESTADOS } from '../validacion/esquemas';
@@ -37,7 +38,7 @@ function useRetrasado(valor, ms = 300) {
 
 export default function PaginaProductos() {
   const { t } = useTranslation();
-  const { esAdmin } = useAuth();
+  const { sesion, esAdmin } = useAuth();
   const navegar = useNavigate();
   const ubicacion = useLocation();
   const angosta = useMediaQuery((tema) => tema.breakpoints.down('md'));
@@ -50,6 +51,7 @@ export default function PaginaProductos() {
   const [error, setError] = useState('');
   const [aEliminar, setAEliminar] = useState(null);
   const [eliminando, setEliminando] = useState(false);
+  const [cambiando, setCambiando] = useState(null);
   const [aviso, setAviso] = useState(ubicacion.state?.aviso || '');
   const q = useRetrasado(filtros.q);
 
@@ -87,10 +89,34 @@ export default function PaginaProductos() {
     }
   };
 
+  const cambiarEstado = async (p) => {
+    const nuevo = p.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+    setCambiando(p.id);
+    try {
+      const actualizado = await cambiarEstadoProducto(p.id, nuevo);
+      setDatos((d) => ({ ...d, content: d.content.map((x) => (x.id === p.id ? actualizado : x)) }));
+      setAviso(t(nuevo === 'ACTIVO' ? 'productos.activado' : 'productos.desactivado'));
+    } catch (e) {
+      setError(mensajeError(e, t));
+    } finally {
+      setCambiando(null);
+    }
+  };
+
   const acciones = (p) => (
     <>
+      {esAdmin && (
+        <Tooltip title={t(p.estado === 'ACTIVO' ? 'productos.desactivar' : 'productos.activar', { nombre: p.nombre })}>
+          <Switch
+            checked={p.estado === 'ACTIVO'}
+            onChange={() => cambiarEstado(p)}
+            disabled={cambiando === p.id}
+            inputProps={{ 'aria-label': t('productos.cambiarEstado', { nombre: p.nombre }), 'data-testid': `estado-${p.id}` }}
+          />
+        </Tooltip>
+      )}
       <Tooltip title={t('productos.editar', { nombre: p.nombre })}>
-        <IconButton aria-label={t('productos.editar', { nombre: p.nombre })} onClick={() => navegar(`/productos/${p.id}/editar`)} data-testid={`editar-${p.id}`}>
+        <IconButton aria-label={t('productos.editar', { nombre: p.nombre })} onClick={() => navegar(`/equipo/lotes/${p.id}/editar`)} data-testid={`editar-${p.id}`}>
           <EditIcon />
         </IconButton>
       </Tooltip>
@@ -111,8 +137,11 @@ export default function PaginaProductos() {
   return (
     <Stack spacing={2}>
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} spacing={1}>
-        <Typography variant="h1">{t('productos.titulo')}</Typography>
-        <Button component={RouterLink} to="/productos/nuevo" variant="contained" startIcon={<AddIcon />} data-testid="boton-nuevo">
+        <Box>
+          <Typography variant="h1">{t('productos.titulo')}</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="explicacion-rol">{t(`productos.rol${sesion.rol}`)}</Typography>
+        </Box>
+        <Button component={RouterLink} to="/equipo/lotes/nuevo" variant="contained" startIcon={<AddIcon />} data-testid="boton-nuevo" sx={{ flexShrink: 0 }}>
           {t('productos.nuevo')}
         </Button>
       </Stack>

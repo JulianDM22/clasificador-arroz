@@ -3,7 +3,7 @@
  * @description Pruebas unitarias y de valores límite de los esquemas Yup (CA-02.2 a CA-02.4,
  *              CA-06.2, CA-06.3).
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-18
+ * @actualizacion 2026-10-21
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * @version 1.0.0
  */
@@ -12,7 +12,7 @@ import i18n from '../i18n';
 import { LIMITES, esquemaLogin, esquemaProducto, validarFoto } from './esquemas';
 
 const t = i18n.t.bind(i18n);
-const valido = { nombre: 'Lote', categoria: 'BASMATI', descripcion: '', estado: 'ACTIVO' };
+const valido = { nombre: 'Lote', categoria: 'BASMATI', descripcion: '' };
 const esValido = (datos) => esquemaProducto(t).isValid({ ...valido, ...datos });
 
 describe('esquemaProducto', () => {
@@ -30,10 +30,9 @@ describe('esquemaProducto', () => {
     expect(await esValido({ descripcion: 'd'.repeat(n) })).toBe(esperado);
   });
 
-  it('CA-02.4 categoría y estado deben ser valores permitidos', async () => {
+  it('CA-02.4 la variedad debe ser un valor permitido', async () => {
     expect(await esValido({ categoria: '' })).toBe(false);
     expect(await esValido({ categoria: 'INTEGRAL' })).toBe(false);
-    expect(await esValido({ estado: 'BORRADO' })).toBe(false);
   });
 
   it('CA-07.2 los mensajes salen en el idioma activo', async () => {
