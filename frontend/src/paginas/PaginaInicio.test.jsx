@@ -2,9 +2,9 @@
  * @file PaginaInicio.test.jsx
  * @description Pruebas unitarias de la página pública de clasificación (HU-06): subir una foto o
  *              usar una de ejemplo, resultado con seguridad y descripción, validación de la foto,
- *              errores de la API, elegir modelo, comparar los 5 y registrar como lote (equipo).
+ *              errores de la API, elegir modelo y comparar los 5.
  * @fecha_creacion 2026-10-21
- * @actualizacion 2026-10-21
+ * @actualizacion 2026-11-26
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * @version 1.0.0
  */
@@ -29,7 +29,7 @@ const prediccion = (categoria, confianza, modelo = 'resnet50v2', nombre = 'ResNe
   probabilidades: { ARBORIO: 0, BASMATI: 0, IPSALA: 0, JASMINE: 0, KARACADAG: 0, [categoria]: confianza },
 });
 const jpeg = () => new File([new Uint8Array([0xff, 0xd8, 0xff])], 'grano.jpg', { type: 'image/jpeg' });
-const inicio = (rol = null) => renderizar(<PaginaInicio />, { rol });
+const inicio = () => renderizar(<PaginaInicio />);
 
 describe('PaginaInicio', () => {
   beforeEach(() => {
@@ -62,7 +62,6 @@ describe('PaginaInicio', () => {
     expect(screen.getByTestId('nivel-alto')).toHaveTextContent('El modelo está muy seguro.');
     expect(screen.getByTestId('resultado-clasificacion')).toHaveTextContent('India y Pakistán');
     expect(screen.getByRole('img', { name: 'Tu foto' })).toHaveAttribute('src', 'blob:vista');
-    expect(screen.queryByTestId('boton-registrar')).toBeNull();
   });
 
   it('con una foto de ejemplo clasifica sin que el visitante tenga que subir nada', async () => {
@@ -240,16 +239,5 @@ describe('PaginaInicio', () => {
     servicios.listarModelos.mockResolvedValue({ ...CATALOGO, es_prueba: true });
     inicio();
     expect(await screen.findByTestId('aviso-prueba')).toBeInTheDocument();
-  });
-
-  it('CA-06.5 con sesión del equipo, "Registrar como lote" abre el formulario con la variedad sugerida', async () => {
-    servicios.clasificarFoto.mockResolvedValue(prediccion('KARACADAG', 0.93));
-    inicio('USUARIO');
-    await userEvent.upload(screen.getByTestId('input-foto'), jpeg());
-    await userEvent.click(await screen.findByTestId('boton-registrar'));
-    const destino = await screen.findByTestId('destino');
-    expect(destino).toHaveTextContent('pantalla-nuevo-lote');
-    expect(destino).toHaveTextContent('"categoria":"KARACADAG"');
-    expect(destino).toHaveTextContent('"confianza":0.93');
   });
 });

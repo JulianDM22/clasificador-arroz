@@ -6,18 +6,15 @@
   "menu": {
     "navegacion": "Navegación principal",
     "clasificar": "Clasificar",
-    "lotes": "Lotes",
-    "panel": "Panel",
-    "equipo": "Acceso del equipo",
-    "cerrarSesion": "Cerrar sesión",
+    "proyecto": "Cómo se construyó",
+    "repositorio": "Ver el código en GitHub",
     "idioma": "Cambiar idioma a inglés",
     "temaOscuro": "Activar tema oscuro",
     "temaClaro": "Activar tema claro",
-    "usuario": "{{usuario}} · {{rol}}"
-  },
-  "roles": {
-    "ADMIN": "Administrador",
-    "USUARIO": "Operario"
+    "panel": "Panel",
+    "cerrarSesion": "Cerrar sesión",
+    "usuario": "{{usuario}} · {{rol}}",
+    "equipo": "Acceso administrador"
   },
   "inicio": {
     "titulo": "¿Qué variedad de arroz es?",
@@ -49,7 +46,6 @@
     "tuFoto": "Tu foto",
     "analizadoCon": "Analizado con {{modelo}} en {{segundos}} s.",
     "otraFoto": "Clasificar otra foto",
-    "registrarLote": "Registrar como lote",
     "detalle": "Ver la probabilidad de cada variedad",
     "avanzadas": "Opciones avanzadas: elegir el modelo o comparar los 5",
     "avanzadasTexto": "El proyecto entrenó 5 modelos de inteligencia artificial. Por defecto se usa el más preciso; aquí puedes elegir otro o comparar los 5 con la misma foto.",
@@ -58,10 +54,9 @@
     "ensamble": "Los 5 juntos (voto ponderado)",
     "comparar": "Comparar los 5 modelos con esta foto",
     "comparando": "Comparando los 5 modelos…",
-    "comoFunciona": "¿Cómo funciona?",
-    "comoFuncionaTexto": "Los modelos se entrenaron con fotos de granos del Rice Image Dataset (Koklu y colaboradores, 75.000 imágenes) y se evaluaron con 11.206 fotos que no vieron durante el entrenamiento: todos aciertan más del 99 %. Tu foto no se guarda; solo se usa para clasificarla.",
     "pie": "Proyecto de la materia Inteligencia Artificial · Julian Delgado y Cesar Camilo Hoyos Diaz",
-    "activando": "Activando el servicio de clasificación: el servidor gratuito se duerme cuando nadie lo usa y tarda hasta un minuto en despertar. Puedes elegir tu foto mientras tanto."
+    "activando": "Activando el servicio de clasificación: el servidor gratuito se duerme cuando nadie lo usa y tarda hasta un minuto en despertar. Puedes elegir tu foto mientras tanto.",
+    "etiqueta": "Inteligencia artificial · Visión por computador"
   },
   "variedades": {
     "ARBORIO": "Variedad italiana de grano corto y redondeado, con mucho almidón. Es el arroz típico del risotto.",
@@ -92,39 +87,98 @@
       "peso": "Peso en el voto"
     }
   },
+  "categorias": {
+    "ARBORIO": "Arborio",
+    "BASMATI": "Basmati",
+    "IPSALA": "Ipsala",
+    "JASMINE": "Jasmine",
+    "KARACADAG": "Karacadag"
+  },
+  "validacion": {
+    "archivoTipo": "La foto debe ser JPEG o PNG",
+    "archivoTamano": "La foto no puede superar 5 MB",
+    "usuarioObligatorio": "El usuario es obligatorio",
+    "contrasenaObligatoria": "La contraseña es obligatoria"
+  },
+  "errores": {
+    "red": "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
+    "generico": "Ocurrió un error inesperado.",
+    "sesionVencida": "Tu sesión venció. Inicia sesión de nuevo."
+  },
+  "noEncontrada": {
+    "titulo": "Página no encontrada",
+    "volver": "Ir al inicio"
+  },
+  "proyecto": {
+    "titulo": "Cómo se construyó",
+    "intro": "Los modelos que usa esta página son el resultado de los 6 temas de inteligencia artificial del proyecto. Cada tarjeta resume qué se hizo y su resultado principal, medido sobre fotos que los modelos no vieron al entrenar.",
+    "tema": "Tema {{n}}",
+    "codigo": "Ver el código y los notebooks",
+    "t1": {
+      "titulo": "Preparación del dataset",
+      "dato": "74.703 fotos",
+      "etiqueta": "tras eliminar 297 duplicadas",
+      "texto": "Partición 70/15/15 sin fuga de datos (train 52.292 · validación 11.205 · test 11.206), guardada en CSV para que sea reproducible. Generador que carga las fotos por lotes y una GAN condicional que genera granos por variedad."
+    },
+    "t2": {
+      "titulo": "Optimización de hiperparámetros",
+      "dato": "23 configuraciones",
+      "etiqueta": "probadas por Hyperband",
+      "texto": "Hyperband buscó el modelo, la tasa de aprendizaje, el lote, el dropout y las épocas, y descartó pronto lo que no prometía. Los modelos preentrenados necesitaron tasas muy bajas, cerca de 0,00001."
+    },
+    "t3": {
+      "titulo": "Validación cruzada",
+      "dato": "99,78 % ± 0,22",
+      "etiqueta": "ResNet50V2 en k-fold estratificado (k = 5)",
+      "texto": "Se compararon k-fold, k-fold estratificado, hold-out y Monte Carlo. Leave-one-out, leave-p-out y series de tiempo se descartaron con justificación. La validación cruzada reveló que EfficientNet era inestable."
+    },
+    "t4": {
+      "titulo": "CNN y transformers",
+      "dato": "99,91 %",
+      "etiqueta": "ResNet50V2 en 11.206 fotos de test",
+      "texto": "3 CNN (propia, EfficientNetB0, ResNet50V2) y 2 transformers (ViT-B/16, DeiT-S), todos por encima del 99 %. En este dataset los transformers no superaron a las CNN."
+    },
+    "t5": {
+      "titulo": "Ensambles",
+      "dato": "99,93 %",
+      "etiqueta": "heterogéneo de los 5 modelos",
+      "texto": "Homogéneo (3 CNN), heterogéneo (los 5) e híbrido (stacking). El mejor corrige 2 fotos frente a ResNet50V2, pero la prueba de McNemar indica que no es significativo (p = 0,5)."
+    },
+    "t6": {
+      "titulo": "Aprendizaje distribuido y federado",
+      "dato": "1,66×",
+      "etiqueta": "más rápido con 2 GPU",
+      "texto": "Entrenamiento distribuido en 2 GPU con MirroredStrategy. Con FedAvg y 5 clientes, el modelo federado llegó a 98,1 % (caso IID) sin que ningún cliente compartiera sus fotos."
+    }
+  },
   "login": {
-    "titulo": "Acceso del equipo",
-    "explicacion": "Solo para el equipo que administra el inventario de lotes. Para clasificar fotos no necesitas cuenta.",
+    "titulo": "Acceso del administrador",
+    "explicacion": "Solo para ver las estadísticas de uso de los modelos. Para clasificar fotos no necesitas cuenta.",
     "usuario": "Usuario",
     "contrasena": "Contraseña",
     "entrar": "Entrar",
     "volver": "Volver a clasificar"
   },
-  "productos": {
-    "titulo": "Lotes de arroz",
-    "rolUSUARIO": "Como operario puedes registrar y editar lotes. Activarlos, desactivarlos y eliminarlos es tarea del administrador.",
-    "rolADMIN": "Como administrador también puedes activar o desactivar lotes y eliminarlos.",
-    "nuevo": "Nuevo lote",
-    "buscar": "Buscar por nombre",
-    "todas": "Todas",
-    "todos": "Todos",
-    "vacio": "No hay lotes que coincidan con los filtros.",
-    "editar": "Editar {{nombre}}",
-    "eliminar": "Eliminar {{nombre}}",
-    "cambiarEstado": "Lote {{nombre}} activo",
-    "activado": "Lote activado",
-    "desactivado": "Lote desactivado",
-    "filasPorPagina": "Filas por página",
-    "rango": "{{desde}}–{{hasta}} de {{total}}",
-    "eliminado": "Lote eliminado",
-    "guardado": "Lote guardado",
-    "confirmarTitulo": "¿Eliminar lote?",
-    "confirmarTexto": "Se eliminará «{{nombre}}». Esta acción no se puede deshacer. Si solo quieres sacarlo del inventario, desactívalo.",
-    "cancelar": "Cancelar",
-    "confirmarEliminar": "Eliminar",
-    "cargando": "Cargando lotes",
-    "activar": "Activar {{nombre}}",
-    "desactivar": "Desactivar {{nombre}}"
+  "panel": {
+    "titulo": "Panel del administrador",
+    "explicacion": "Uso de los modelos desde la página pública: cuántas fotos se clasifican, qué variedades salen y qué modelos se usan.",
+    "actualizar": "Actualizar",
+    "cargando": "Cargando estadísticas",
+    "clasificacionesTotal": "Clasificaciones hechas",
+    "clasificaciones7": "En los últimos 7 días",
+    "clasifPorDia": "Clasificaciones por día (últimos 14 días)",
+    "clasifPorVariedad": "Variedad sugerida en las clasificaciones",
+    "porModelo": "Modelos más usados",
+    "sinClasificaciones": "Todavía no hay clasificaciones.",
+    "verTabla": "Ver los datos en tabla",
+    "dia": "Día",
+    "cantidad": "Cantidad",
+    "comparacion": "Comparación de los 5",
+    "modelosUsados": "Modelos usados"
+  },
+  "roles": {
+    "ADMIN": "Administrador",
+    "USUARIO": "Operario"
   },
   "campos": {
     "id": "Id",
@@ -133,67 +187,5 @@
     "descripcion": "Descripción",
     "estado": "Estado",
     "acciones": "Acciones"
-  },
-  "categorias": {
-    "ARBORIO": "Arborio",
-    "BASMATI": "Basmati",
-    "IPSALA": "Ipsala",
-    "JASMINE": "Jasmine",
-    "KARACADAG": "Karacadag"
-  },
-  "estados": {
-    "ACTIVO": "Activo",
-    "INACTIVO": "Inactivo"
-  },
-  "formulario": {
-    "tituloNuevo": "Nuevo lote",
-    "tituloEditar": "Editar lote",
-    "guardar": "Guardar",
-    "volver": "Volver a los lotes",
-    "caracteres": "{{n}} / {{max}} caracteres",
-    "sugerida": "Variedad sugerida por la foto: {{variedad}} ({{confianza}} de seguridad). Puedes cambiarla si no coincide.",
-    "sinSaber": "¿No sabes la variedad? Clasifica una foto del grano",
-    "nuevoActivo": "El lote queda activo al guardarlo."
-  },
-  "panel": {
-    "titulo": "Panel del administrador",
-    "explicacion": "Resumen del inventario y del uso del clasificador público.",
-    "actualizar": "Actualizar",
-    "cargando": "Cargando estadísticas",
-    "lotes": "Lotes",
-    "lotesTotal": "Lotes registrados",
-    "lotesActivos": "Activos",
-    "lotesInactivos": "Inactivos",
-    "clasificacionesTotal": "Clasificaciones hechas",
-    "clasificaciones7": "En los últimos 7 días",
-    "lotesPorVariedad": "Lotes por variedad",
-    "clasifPorDia": "Clasificaciones por día (últimos 14 días)",
-    "clasifPorVariedad": "Variedad sugerida en las clasificaciones",
-    "porModelo": "Modelos más usados",
-    "sinClasificaciones": "Todavía no hay clasificaciones.",
-    "verTabla": "Ver los datos en tabla",
-    "dia": "Día",
-    "cantidad": "Cantidad",
-    "comparacion": "Comparación de los 5"
-  },
-  "validacion": {
-    "nombreObligatorio": "El nombre es obligatorio",
-    "nombreMin": "El nombre debe tener al menos {{min}} caracteres",
-    "nombreMax": "El nombre no puede superar {{max}} caracteres",
-    "categoriaObligatoria": "Selecciona una variedad",
-    "descripcionMax": "La descripción no puede superar {{max}} caracteres",
-    "usuarioObligatorio": "El usuario es obligatorio",
-    "contrasenaObligatoria": "La contraseña es obligatoria",
-    "archivoTipo": "La foto debe ser JPEG o PNG",
-    "archivoTamano": "La foto no puede superar 5 MB"
-  },
-  "errores": {
-    "red": "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
-    "sesionVencida": "Tu sesión venció. Inicia sesión de nuevo.",
-    "generico": "Ocurrió un error inesperado."
-  },
-  "noEncontrada": {
-    "titulo": "Página no encontrada",
-    "volver": "Ir al inicio"
   }
 }

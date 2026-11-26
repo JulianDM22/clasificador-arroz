@@ -1,10 +1,9 @@
 /**
  * @file utilidades.jsx
  * @description Ayudas para las pruebas de componentes: renderiza con todos los proveedores y,
- *              si se pide, con una sesión iniciada y con estado de navegación (por ejemplo, la
- *              variedad sugerida que llega desde la página de clasificación).
+ *              si se pide, con una sesión iniciada.
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-21
+ * @actualizacion 2026-11-26
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * @version 1.1.0
  */
@@ -32,8 +31,7 @@ export function renderizar(ui, { ruta = '/', estado, patron = '*', rol = null } 
         <MemoryRouter initialEntries={[{ pathname: ruta, state: estado }]}>
           <Routes>
             <Route path={patron} element={ui} />
-            <Route path="/equipo/lotes" element={<Destino nombre="pantalla-lotes" />} />
-            <Route path="/equipo/lotes/nuevo" element={<Destino nombre="pantalla-nuevo-lote" />} />
+            <Route path="/equipo/panel" element={<Destino nombre="pantalla-panel" />} />
             <Route path="/equipo/entrar" element={<Destino nombre="pantalla-entrar" />} />
           </Routes>
         </MemoryRouter>

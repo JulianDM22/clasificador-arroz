@@ -1,33 +1,31 @@
 /**
  * @file PaginaInicio.jsx
- * @description Página pública (HU-06): cualquier visitante, sin cuenta, sube la foto de un grano
- *              o prueba con una de ejemplo y ve la variedad, qué tan seguro está el modelo y una
- *              descripción de la variedad. Las opciones avanzadas permiten elegir el modelo o
- *              comparar los 5 (CA-06.6, CA-06.7). Si quien clasifica es del equipo, puede
- *              registrar el resultado como lote. En el plan gratuito los servicios se duermen: si
- *              la API responde 502/503/504 o no responde, se reintenta solo hasta ~2 minutos
- *              mientras se avisa que el servicio se está activando.
+ * @description Página principal: cualquier visitante sube la foto de un grano o prueba con una de
+ *              ejemplo y ve la variedad, qué tan seguro está el modelo y una descripción de la
+ *              variedad. Las opciones avanzadas permiten elegir el modelo o comparar los 5, y la
+ *              sección final muestra cómo se construyó el proyecto (los 6 temas de IA). En el plan
+ *              gratuito el servicio se duerme: si responde 502/503/504 o no responde, se reintenta
+ *              solo hasta ~2 minutos mientras se avisa que se está activando.
  * @fecha_creacion 2026-10-21
- * @actualizacion 2026-10-21
+ * @actualizacion 2026-11-26
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
- * @version 1.1.0
+ * @version 2.0.0
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, ButtonBase, Card, CardContent, CircularProgress,
   LinearProgress, MenuItem, Paper, Stack, TextField, Typography,
 } from '@mui/material';
-import AddBoxIcon from '@mui/icons-material/AddBox';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { alpha } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import { clasificarFoto, compararModelos, listarModelos } from '../api/servicios';
 import { mensajeError } from '../api/cliente';
-import { useAuth } from '../auth/AuthContexto';
 import { CATEGORIAS, TIPOS_IMAGEN, validarFoto } from '../validacion/esquemas';
 import { ENSAMBLE, MetricasModelos, Probabilidades, TablaComparacion, numero, porcentaje } from '../componentes/Modelos';
+import SeccionProyecto from '../componentes/SeccionProyecto';
 
 /** Desde cuántos ms de espera se avisa que el servidor gratuito puede estar despertando. */
 const AVISO_LENTO_MS = 4000;
@@ -169,8 +167,6 @@ function ZonaFoto({ alElegir, ocupado }) {
  */
 function Resultado({ resultado, vista, alReiniciar }) {
   const { t, i18n } = useTranslation();
-  const { sesion } = useAuth();
-  const navegar = useNavigate();
   const nivel = nivelConfianza(resultado.confianza);
   const variedad = t(`categorias.${resultado.categoria}`);
 
@@ -202,12 +198,6 @@ function Resultado({ resultado, vista, alReiniciar }) {
               <Button variant="contained" startIcon={<RestartAltIcon />} onClick={alReiniciar} data-testid="boton-otra">
                 {t('inicio.otraFoto')}
               </Button>
-              {sesion && (
-                <Button variant="outlined" startIcon={<AddBoxIcon />} data-testid="boton-registrar"
-                  onClick={() => navegar('/equipo/lotes/nuevo', { state: { categoria: resultado.categoria, confianza: resultado.confianza } })}>
-                  {t('inicio.registrarLote')}
-                </Button>
-              )}
             </Stack>
           </Box>
         </Stack>
@@ -316,19 +306,22 @@ export default function PaginaInicio() {
 
   return (
     <Stack spacing={3}>
-      <Box component="header">
-        <Typography variant="h1" sx={{ fontSize: { xs: '1.9rem', sm: '2.4rem' } }}>{t('inicio.titulo')}</Typography>
-        <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 720, fontSize: '1.05rem' }}>{t('inicio.subtitulo')}</Typography>
+      <Box component="header" sx={(tema) => ({
+        p: { xs: 3, sm: 5 }, borderRadius: 3,
+        background: `linear-gradient(135deg, ${alpha(tema.palette.primary.main, 0.14)}, ${alpha(tema.palette.secondary.main, 0.10)})`,
+      })}>
+        <Typography variant="overline" color="primary" fontWeight={700}>{t('inicio.etiqueta')}</Typography>
+        <Typography variant="h1" sx={{ fontSize: { xs: '2rem', sm: '2.8rem' }, lineHeight: 1.15 }}>{t('inicio.titulo')}</Typography>
+        <Typography color="text.secondary" sx={{ mt: 1.5, mb: 3, maxWidth: 720, fontSize: '1.1rem' }}>{t('inicio.subtitulo')}</Typography>
+        <Pasos />
       </Box>
-
-      <Pasos />
 
       {catalogo?.es_prueba && <Alert severity="warning" data-testid="aviso-prueba">{t('clasificador.avisoPrueba')}</Alert>}
       {activando && !cargando && (
         <Alert severity="info" icon={<CircularProgress size={18} />} data-testid="activando">{t('inicio.activando')}</Alert>
       )}
 
-      <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }} ref={zona}>
+      <Paper variant="outlined" id="clasificar" sx={{ p: { xs: 2, sm: 3 }, scrollMarginTop: 80 }} ref={zona}>
         {!foto || error ? (
           <ZonaFoto alElegir={alElegir} ocupado={cargando} />
         ) : null}
@@ -373,10 +366,7 @@ export default function PaginaInicio() {
         </AccordionDetails>
       </Accordion>
 
-      <Box component="section" aria-labelledby="como-funciona">
-        <Typography id="como-funciona" variant="h2" sx={{ mb: 1 }}>{t('inicio.comoFunciona')}</Typography>
-        <Typography color="text.secondary" sx={{ maxWidth: 820 }}>{t('inicio.comoFuncionaTexto')}</Typography>
-      </Box>
+      <SeccionProyecto />
     </Stack>
   );
 }

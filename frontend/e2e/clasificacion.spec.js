@@ -2,14 +2,14 @@
  * @file clasificacion.spec.js
  * @description Pruebas de sistema de la página pública de clasificación (HU-06) con los modelos
  *              reales: un visitante sin cuenta clasifica una foto de ejemplo o propia, elige el
- *              modelo, compara los 5, y un integrante del equipo registra el resultado como lote.
+ *              modelo y compara los 5.
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-21
+ * @actualizacion 2026-11-26
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * @version 2.0.0
  */
 import { expect, test } from '@playwright/test';
-import { FOTO_PNG, buscar, entrar, unico } from './ayudas';
+import { FOTO_PNG } from './ayudas';
 
 test.describe('HU-06 Clasificación pública', () => {
   test('CA-06.8 / CA-06.1 un visitante sin cuenta clasifica una foto de ejemplo y ve la variedad', async ({ page }) => {
@@ -62,22 +62,5 @@ test.describe('HU-06 Clasificación pública', () => {
     }
     await expect(page.getByTestId('consenso')).toHaveText('Todos los modelos coinciden');
     await expect(page.getByTestId('metricas-modelos').getByRole('row')).toHaveCount(6);
-  });
-
-  test('CA-06.5 un operario clasifica y registra el resultado como lote con la variedad sugerida', async ({ page }) => {
-    await entrar(page);
-    await page.getByTestId('nav-clasificar').click();
-    await page.getByRole('button', { name: 'Probar con la foto de ejemplo de un grano Karacadag' }).click();
-    await expect(page.getByTestId('variedad')).toHaveText('Karacadag', { timeout: 60_000 });
-    await page.getByTestId('boton-registrar').click();
-
-    await expect(page.getByTestId('variedad-sugerida')).toContainText('Variedad sugerida por la foto: Karacadag');
-    await expect(page.getByTestId('select-categoria')).toContainText('Karacadag');
-    const nombre = unico('E2E Foto');
-    await page.getByLabel('Nombre').fill(nombre);
-    await page.getByTestId('boton-guardar').click();
-    await buscar(page, nombre);
-    await expect(page.getByTestId('producto').first()).toContainText('Karacadag');
-    await expect(page.getByTestId('producto').first()).toContainText('Activo');
   });
 });

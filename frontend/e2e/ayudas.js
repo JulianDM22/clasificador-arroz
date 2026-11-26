@@ -1,11 +1,11 @@
 /**
  * @file ayudas.js
  * @description Utilidades compartidas por las pruebas de sistema con Playwright: usuarios de
- *              prueba, foto sintética, nombres únicos, acceso del equipo y creación de lotes.
+ *              prueba, foto sintética y acceso del administrador.
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-21
+ * @actualizacion 2026-11-26
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
- * @version 2.0.0
+ * @version 3.0.0
  */
 import { expect } from '@playwright/test';
 
@@ -20,43 +20,16 @@ export const FOTO_PNG = Buffer.from(
   'base64',
 );
 
-/** Nombre único para que las pruebas no choquen entre sí. */
-export const unico = (base) => `${base} ${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
-
 /**
- * Inicia sesión por el acceso del equipo y espera el inventario de lotes.
+ * Inicia sesión por el acceso del administrador.
  * @param {import('@playwright/test').Page} page
- * @param {'admin'|'operario'} quien
+ * @param {'admin'|'operario'} quien el administrador llega al panel; un usuario sin ese rol, a la página principal
  */
-export async function entrar(page, quien = 'operario') {
+export async function entrar(page, quien = 'admin') {
   await page.goto('/equipo/entrar');
   await page.getByLabel('Usuario').fill(USUARIOS[quien].usuario);
   await page.getByLabel('Contraseña').fill(USUARIOS[quien].clave);
   await page.getByTestId('boton-entrar').click();
-  await expect(page.getByRole('heading', { name: 'Lotes de arroz', level: 1 })).toBeVisible();
-}
-
-/**
- * Crea un lote desde el formulario.
- * @param {import('@playwright/test').Page} page
- * @param {{nombre: string, categoria?: string, descripcion?: string}} datos
- */
-export async function crearProducto(page, { nombre, categoria = 'Ipsala', descripcion = '' }) {
-  await page.getByTestId('boton-nuevo').click();
-  await page.getByLabel('Nombre').fill(nombre);
-  await page.getByTestId('select-categoria').click();
-  await page.getByRole('option', { name: categoria }).click();
-  if (descripcion) await page.getByLabel('Descripción').fill(descripcion);
-  await page.getByTestId('boton-guardar').click();
-  await expect(page.getByText('Lote guardado')).toBeVisible();
-}
-
-/**
- * Filtra el inventario por texto y espera a que aparezca el lote.
- * @param {import('@playwright/test').Page} page
- * @param {string} texto
- */
-export async function buscar(page, texto) {
-  await page.getByTestId('filtro-q').fill(texto);
-  await expect(page.getByTestId('producto').first()).toContainText(texto);
+  const destino = quien === 'admin' ? 'Panel del administrador' : '¿Qué variedad de arroz es?';
+  await expect(page.getByRole('heading', { name: destino, level: 1 })).toBeVisible();
 }

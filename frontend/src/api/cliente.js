@@ -4,7 +4,7 @@
  *              clasificación, que es pública) y el idioma activo a cada petición, y avisa a la
  *              aplicación cuando el servidor responde 401 para cerrar la sesión.
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-21
+ * @actualizacion 2026-11-26
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * @version 1.1.0
  */
@@ -51,15 +51,6 @@ cliente.interceptors.response.use(
 export function mensajeError(error, t) {
   if (!error?.response) return t('errores.red');
   return error.response.data?.detail || t('errores.generico');
-}
-
-/**
- * Errores por campo devueltos por la API (propiedad "errores" del Problem Details).
- * @param {unknown} error error de axios
- * @returns {Record<string, string>} mapa campo → mensaje
- */
-export function erroresDeCampo(error) {
-  return error?.response?.data?.errores || {};
 }
 
 export default cliente;

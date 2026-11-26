@@ -1,11 +1,10 @@
 /**
  * @file main.jsx
- * @description Punto de entrada de React: monta la aplicación con sus proveedores (tema,
- *              autenticación, idioma y enrutador).
+ * @description Punto de entrada de la aplicación React: idioma, tema, sesión y enrutador.
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-18
+ * @actualizacion 2026-11-26
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
- * @version 1.0.0
+ * @version 2.0.0
  */
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';

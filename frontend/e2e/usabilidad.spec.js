@@ -1,10 +1,10 @@
 /**
  * @file usabilidad.spec.js
  * @description Pruebas de sistema de idioma, tema, diseño responsive, teclado y accesibilidad
- *              con axe-core (HU-07, HU-08) en la página pública, el acceso del equipo, el
- *              inventario, el formulario y el panel. Las marcadas @celular también corren a 375 px.
+ *              con axe-core (HU-07, HU-08) en la página pública, el acceso y el panel del
+ *              administrador. Las marcadas @celular también corren a 375 px.
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-21
+ * @actualizacion 2026-11-26
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * @version 2.0.0
  */
@@ -28,7 +28,7 @@ test.describe('HU-07 Idioma', () => {
     await page.goto('/');
     await page.getByTestId('boton-idioma').click();
     await expect(page.getByRole('heading', { name: 'Which rice variety is it?', level: 1 })).toBeVisible();
-    await expect(page.getByTestId('nav-equipo')).toHaveText('Team access');
+    await expect(page.getByTestId('nav-equipo')).toHaveText('Admin access');
     await page.reload();
     await expect(page.getByRole('heading', { name: 'Which rice variety is it?', level: 1 })).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
@@ -36,11 +36,10 @@ test.describe('HU-07 Idioma', () => {
     await expect(page.getByRole('heading', { name: '¿Qué variedad de arroz es?', level: 1 })).toBeVisible();
   });
 
-  test('CA-07.2 el inventario también se traduce', async ({ page }) => {
+  test('CA-07.2 el panel también se traduce', async ({ page }) => {
     await entrar(page);
     await page.getByTestId('boton-idioma').click();
-    await expect(page.getByRole('heading', { name: 'Rice batches', level: 1 })).toBeVisible();
-    await expect(page.getByTestId('boton-nuevo')).toHaveText('New batch');
+    await expect(page.getByRole('heading', { name: 'Administrator dashboard', level: 1 })).toBeVisible();
     await page.getByTestId('boton-idioma').click();
   });
 });
@@ -66,41 +65,36 @@ test.describe('HU-08 Interfaz usable y accesible', () => {
     expect(await violacionesGraves(page)).toEqual([]);
   });
 
-  test('CA-08.2 acceso del equipo sin violaciones graves de accesibilidad @celular', async ({ page }) => {
+  test('CA-08.2 acceso del administrador sin violaciones graves de accesibilidad @celular', async ({ page }) => {
     await page.goto('/equipo/entrar');
     expect(await violacionesGraves(page)).toEqual([]);
   });
 
-  test('CA-08.2 inventario, formulario y panel sin violaciones graves de accesibilidad @celular', async ({ page }) => {
+  test('CA-08.2 panel sin violaciones graves de accesibilidad @celular', async ({ page }) => {
     await entrar(page, 'admin');
-    expect(await violacionesGraves(page)).toEqual([]);
-    await page.getByTestId('boton-nuevo').click();
-    await expect(page.getByLabel('Nombre')).toBeVisible();
-    expect(await violacionesGraves(page)).toEqual([]);
-    await page.goto('/equipo/panel');
-    await expect(page.getByTestId('cifra-lotes')).toBeVisible();
+    await expect(page.getByTestId('cifra-clasificaciones')).toBeVisible();
+    // Un tooltip que se está abriendo tiene opacidad parcial y axe lo mide como bajo contraste.
+    await page.mouse.move(0, 0);
+    await expect(page.locator('.MuiTooltip-tooltip')).toHaveCount(0);
     expect(await violacionesGraves(page)).toEqual([]);
   });
 
-  test('CA-08.1 sin desplazamiento horizontal en la página pública, el inventario y el formulario @celular', async ({ page }) => {
+  test('CA-08.1 sin desplazamiento horizontal en la página pública y el panel @celular', async ({ page }) => {
     await page.goto('/');
     expect(await sinDesplazamientoHorizontal(page)).toBe(true);
     await entrar(page);
-    expect(await sinDesplazamientoHorizontal(page)).toBe(true);
-    await expect(page.getByTestId('boton-nuevo')).toBeVisible();
-    await page.getByTestId('boton-nuevo').click();
-    await expect(page.getByTestId('boton-guardar')).toBeVisible();
+    await expect(page.getByTestId('cifra-clasificaciones')).toBeVisible();
     expect(await sinDesplazamientoHorizontal(page)).toBe(true);
   });
 
-  test('CA-08.4 el acceso del equipo se completa solo con teclado', async ({ page }) => {
+  test('CA-08.4 el acceso del administrador se completa solo con teclado', async ({ page }) => {
     await page.goto('/equipo/entrar');
     await page.getByLabel('Usuario').focus();
-    await page.keyboard.type('operario');
+    await page.keyboard.type('admin');
     await page.keyboard.press('Tab');
-    await page.keyboard.type(process.env.E2E_USUARIO_PASSWORD || 'Operario123*');
+    await page.keyboard.type(process.env.E2E_ADMIN_PASSWORD || 'Admin123*');
     await page.keyboard.press('Enter');
-    await expect(page.getByRole('heading', { name: 'Lotes de arroz', level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Panel del administrador', level: 1 })).toBeVisible();
   });
 
   test('CA-08.4 una foto de ejemplo se clasifica solo con teclado', async ({ page }) => {

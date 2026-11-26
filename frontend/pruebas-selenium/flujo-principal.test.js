@@ -4,7 +4,7 @@
  *              aplicación desplegada: inicio de sesión, registro, búsqueda, permisos por rol y
  *              cierre de sesión. Se ejecutan con el corredor de pruebas de Node (node --test).
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-21
+ * @actualizacion 2026-11-26
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * @version 1.0.0
  */
@@ -26,7 +26,7 @@ async function entrar(usuario, clave) {
   await (await visible(By.id('username'))).sendKeys(usuario);
   await driver.findElement(By.id('password')).sendKeys(clave);
   await driver.findElement(porTestId('boton-entrar')).click();
-  await visible(porTestId('boton-nuevo'));
+  await visible(porTestId('cifra-clasificaciones'));
 }
 
 async function salir() {
@@ -66,53 +66,25 @@ describe('Selenium · flujo principal', () => {
     assert.equal(await error.getText(), 'Usuario o contraseña incorrectos');
   });
 
-  it('CA-01.1 / CA-02.1 / CA-03.2 el operario inicia sesión, registra un lote y lo encuentra', async () => {
-    await entrar('operario', process.env.E2E_USUARIO_PASSWORD || 'Operario123*');
-    const nombre = `Selenium ${Date.now().toString(36)}`;
-
-    await driver.findElement(porTestId('boton-nuevo')).click();
-    await (await visible(By.id('nombre'))).sendKeys(nombre);
-    await driver.findElement(porTestId('select-categoria')).click();
-    await (await visible(By.xpath("//li[@role='option' and normalize-space()='Jasmine']"))).click();
-    await driver.findElement(By.id('descripcion')).sendKeys('Registrado con Selenium WebDriver');
-    await driver.findElement(porTestId('boton-guardar')).click();
-
-    await visible(porTestId('boton-nuevo'));
-    await driver.findElement(porTestId('filtro-q')).sendKeys(nombre);
-    // El listado se vuelve a dibujar al filtrar: si una fila desaparece a mitad de la lectura, se reintenta.
-    const textoFila = await driver.wait(async () => {
-      try {
-        for (const f of await driver.findElements(porTestId('producto'))) {
-          const texto = await f.getText();
-          if (texto.includes(nombre)) return texto;
-        }
-      } catch (e) {
-        if (e.name !== 'StaleElementReferenceError') throw e;
-      }
-      return null;
-    }, ESPERA);
-    assert.match(textoFila, /Jasmine/);
+  it('CA-01.1 / CA-10.1 el administrador inicia sesión y ve el panel de uso', async () => {
+    await entrar('admin', process.env.E2E_ADMIN_PASSWORD || 'Admin123*');
+    const cifra = await visible(porTestId('cifra-clasificaciones'));
+    assert.match(await cifra.getText(), /^[\d.]+$/);
+    await salir();
   });
 
-  it('CA-01.4 / CA-10.2 el operario no tiene botones de eliminar ni interruptores de estado', async () => {
-    assert.equal((await driver.findElements(By.css('[data-testid^="eliminar-"]'))).length, 0);
-    assert.equal((await driver.findElements(By.css('[data-testid^="estado-"]'))).length, 0);
+  it('CA-10.1 un usuario sin rol de administrador no ve el panel', async () => {
+    await driver.get(`${URL}/equipo/entrar`);
+    await (await visible(By.id('username'))).sendKeys('operario');
+    await driver.findElement(By.id('password')).sendKeys(process.env.E2E_USUARIO_PASSWORD || 'Operario123*');
+    await driver.findElement(porTestId('boton-entrar')).click();
+    await visible(porTestId('zona-foto'));
     assert.equal((await driver.findElements(porTestId('nav-panel'))).length, 0);
     await salir();
   });
 
-  it('CA-05.3 el administrador ve eliminar y el diálogo pide confirmación', async () => {
-    await entrar('admin', process.env.E2E_ADMIN_PASSWORD || 'Admin123*');
-    await (await visible(By.css('[data-testid^="eliminar-"]'))).click();
-    const dialogo = await visible(By.css('[role="dialog"]'));
-    assert.match(await dialogo.getText(), /¿Eliminar lote\?/);
-    await dialogo.findElement(By.xpath(".//button[normalize-space()='Cancelar']")).click();
-    await driver.wait(until.stalenessOf(dialogo), ESPERA);
-    await salir();
-  });
-
-  it('CA-01.3 después de cerrar sesión la página del equipo redirige al acceso del equipo', async () => {
-    await driver.get(`${URL}/equipo/lotes`);
+  it('CA-01.3 después de cerrar sesión el panel redirige al acceso', async () => {
+    await driver.get(`${URL}/equipo/panel`);
     await driver.wait(until.urlContains('/equipo/entrar'), ESPERA);
     assert.ok((await driver.getCurrentUrl()).endsWith('/equipo/entrar'));
   });

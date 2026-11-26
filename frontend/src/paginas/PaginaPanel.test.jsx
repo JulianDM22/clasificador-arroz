@@ -3,7 +3,7 @@
  * @description Pruebas unitarias del panel del administrador (HU-10): cifras, gráficas con sus
  *              tablas de datos, estado vacío, error y actualización.
  * @fecha_creacion 2026-10-21
- * @actualizacion 2026-10-21
+ * @actualizacion 2026-11-26
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * @version 1.0.0
  */
@@ -33,21 +33,20 @@ describe('PaginaPanel', () => {
     servicios.obtenerEstadisticas.mockResolvedValue(ESTADISTICAS);
   });
 
-  it('CA-10.1 muestra las cifras del inventario y del uso, con formato colombiano', async () => {
+  it('CA-10.1 muestra las cifras de uso de los modelos', async () => {
     panel();
-    expect(await screen.findByTestId('cifra-lotes')).toHaveTextContent('1.040');
-    expect(screen.getByTestId('cifra-activos')).toHaveTextContent('1.039');
-    expect(screen.getByTestId('cifra-inactivos')).toHaveTextContent('1');
-    expect(screen.getByTestId('cifra-clasificaciones')).toHaveTextContent('12');
+    expect(await screen.findByTestId('cifra-clasificaciones')).toHaveTextContent('12');
     expect(screen.getByTestId('cifra-7dias')).toHaveTextContent('7');
+    expect(screen.getByTestId('cifra-modelos')).toHaveTextContent('3');
+    expect(screen.queryByTestId('cifra-lotes')).toBeNull();
   });
 
   it('CA-10.1 las gráficas tienen el detalle de cada barra y sus datos en tabla', async () => {
     panel();
-    const lotes = await screen.findByTestId('grafica-lotes');
-    expect(within(lotes).getByLabelText('Karacadag: 230')).toBeInTheDocument();
-    await userEvent.click(within(lotes).getByText('Ver los datos en tabla'));
-    expect(within(lotes).getByRole('row', { name: 'Ipsala 214' })).toBeInTheDocument();
+    const variedades = await screen.findByTestId('grafica-variedades');
+    expect(within(variedades).getByLabelText('Jasmine: 7')).toBeInTheDocument();
+    await userEvent.click(within(variedades).getByText('Ver los datos en tabla'));
+    expect(within(variedades).getByRole('row', { name: 'Basmati 5' })).toBeInTheDocument();
 
     const modelos = screen.getByTestId('grafica-modelos');
     expect(within(modelos).getByLabelText('ResNet50V2: 9')).toBeInTheDocument();
@@ -73,6 +72,6 @@ describe('PaginaPanel', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo conectar');
     await userEvent.click(screen.getByTestId('boton-actualizar'));
     await waitFor(() => expect(servicios.obtenerEstadisticas).toHaveBeenCalledTimes(2));
-    expect(await screen.findByTestId('cifra-lotes')).toBeInTheDocument();
+    expect(await screen.findByTestId('cifra-clasificaciones')).toBeInTheDocument();
   });
 });

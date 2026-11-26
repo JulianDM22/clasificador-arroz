@@ -1,26 +1,31 @@
 /**
  * @file Encabezado.jsx
- * @description Estructura común de las páginas: barra superior con navegación, idioma y tema,
- *              enlace para saltar al contenido (accesibilidad) y pie. Un visitante ve "Clasificar"
- *              y el acceso del equipo; el operario ve además "Lotes" y el administrador "Panel".
+ * @description Estructura común de la página: barra superior con enlaces a las secciones
+ *              (Clasificar, Cómo se construyó), idioma, tema y repositorio, y el acceso del
+ *              administrador o, con sesión, su panel y el botón de salir; enlace para saltar al
+ *              contenido (accesibilidad) y pie.
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-21
+ * @actualizacion 2026-11-26
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
- * @version 2.0.0
+ * @version 3.0.0
  */
 import { AppBar, Box, Button, Container, IconButton, Stack, Toolbar, Tooltip, Typography } from '@mui/material';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
+import GitHubIcon from '@mui/icons-material/GitHub';
 import GrassIcon from '@mui/icons-material/Grass';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { Link as RouterLink, NavLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContexto';
 import { useTema } from '../tema/TemaContexto';
 import { tokensBase } from '../tema/tokens';
 
+/** Repositorio público del proyecto. */
+export const URL_REPOSITORIO = 'https://github.com/JulianDM22/clasificador-arroz';
+
 /**
- * Selector de idioma reutilizable (también aparece en el acceso del equipo).
+ * Selector de idioma.
  */
 export function BotonIdioma() {
   const { t, i18n } = useTranslation();
@@ -50,22 +55,6 @@ export function BotonTema() {
   );
 }
 
-/** Enlace de navegación que se resalta cuando su página está abierta. */
-function Enlace({ to, end, children, testid }) {
-  return (
-    <Button
-      component={NavLink}
-      to={to}
-      end={end}
-      color="inherit"
-      data-testid={testid}
-      sx={{ opacity: 0.85, '&.active': { opacity: 1, textDecoration: 'underline', textUnderlineOffset: 6 } }}
-    >
-      {children}
-    </Button>
-  );
-}
-
 /**
  * @param {{children: React.ReactNode}} props contenido de la página
  */
@@ -73,12 +62,10 @@ export default function Encabezado({ children }) {
   const { t } = useTranslation();
   const { sesion, esAdmin, cerrar } = useAuth();
   const navegar = useNavigate();
-
   const salir = () => {
     cerrar();
     navegar('/');
   };
-
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
       <Box
@@ -88,20 +75,25 @@ export default function Encabezado({ children }) {
       >
         {t('app.saltar')}
       </Box>
-      <AppBar position="sticky" color="primary">
+      <AppBar position="sticky" color="primary" elevation={0}>
         <Toolbar sx={{ gap: 0.5, flexWrap: 'wrap', maxWidth: tokensBase.anchoMaximoContenido + 48, width: '100%', mx: 'auto' }}>
           <Stack direction="row" alignItems="center" spacing={1} component={RouterLink} to="/"
             sx={{ color: 'inherit', textDecoration: 'none', flexGrow: 1, minWidth: 0, mr: 1 }}>
             <GrassIcon aria-hidden />
             <Typography variant="h6" component="span" noWrap>{t('app.titulo')}</Typography>
           </Stack>
-          <Box component="nav" aria-label={t('menu.navegacion')} sx={{ display: 'flex', flexWrap: 'wrap' }}>
-            <Enlace to="/" end testid="nav-clasificar">{t('menu.clasificar')}</Enlace>
-            {sesion && <Enlace to="/equipo/lotes" testid="nav-lotes">{t('menu.lotes')}</Enlace>}
-            {esAdmin && <Enlace to="/equipo/panel" testid="nav-panel">{t('menu.panel')}</Enlace>}
+          <Box component="nav" aria-label={t('menu.navegacion')} sx={{ display: { xs: 'none', sm: 'flex' } }}>
+            <Button color="inherit" href="/#clasificar" data-testid="nav-clasificar">{t('menu.clasificar')}</Button>
+            <Button color="inherit" href="/#proyecto" data-testid="nav-proyecto">{t('menu.proyecto')}</Button>
+            {esAdmin && <Button color="inherit" component={RouterLink} to="/equipo/panel" data-testid="nav-panel">{t('menu.panel')}</Button>}
           </Box>
           <BotonIdioma />
           <BotonTema />
+          <Tooltip title={t('menu.repositorio')}>
+            <IconButton color="inherit" href={URL_REPOSITORIO} target="_blank" rel="noopener noreferrer" aria-label={t('menu.repositorio')}>
+              <GitHubIcon />
+            </IconButton>
+          </Tooltip>
           {sesion ? (
             <>
               <Typography variant="body2" sx={{ display: { xs: 'none', md: 'block' }, ml: 1 }} data-testid="usuario-actual">
@@ -120,10 +112,10 @@ export default function Encabezado({ children }) {
           )}
         </Toolbar>
       </AppBar>
-      <Container component="main" id="contenido" tabIndex={-1} sx={{ py: { xs: 3, sm: 4 }, maxWidth: tokensBase.anchoMaximoContenido, outline: 'none', flexGrow: 1 }}>
+      <Container component="main" id="contenido" tabIndex={-1} sx={{ py: { xs: 3, sm: 5 }, maxWidth: tokensBase.anchoMaximoContenido, outline: 'none', flexGrow: 1 }}>
         {children}
       </Container>
-      <Box component="footer" sx={{ borderTop: 1, borderColor: 'divider', py: 2, px: 2, textAlign: 'center' }}>
+      <Box component="footer" sx={{ borderTop: 1, borderColor: 'divider', py: 3, px: 2, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">{t('inicio.pie')}</Typography>
       </Box>
     </Box>

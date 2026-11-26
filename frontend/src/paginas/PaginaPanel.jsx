@@ -1,11 +1,10 @@
 /**
  * @file PaginaPanel.jsx
- * @description Panel del administrador (HU-10, CA-10.1): cifras del inventario de lotes y del
- *              uso del clasificador público, con gráficas de barras de una sola serie (un color,
+ * @description Panel del administrador (HU-10, CA-10.1): uso del clasificador público, con gráficas de barras de una sola serie (un color,
  *              sin leyenda), detalle al pasar el mouse o enfocar cada barra y los mismos datos
  *              en tabla para lectores de pantalla.
  * @fecha_creacion 2026-10-21
- * @actualizacion 2026-10-21
+ * @actualizacion 2026-11-26
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * @version 1.0.0
  */
@@ -165,24 +164,21 @@ export default function PaginaPanel() {
       {error && <Alert severity="error" role="alert">{error}</Alert>}
       {datos && (
         <>
-          <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' } }}>
-            <Cifra titulo={t('panel.lotesTotal')} valor={datos.lotes.total} testid="cifra-lotes" />
-            <Cifra titulo={t('panel.lotesActivos')} valor={datos.lotes.activos} testid="cifra-activos" />
-            <Cifra titulo={t('panel.lotesInactivos')} valor={datos.lotes.inactivos} testid="cifra-inactivos" />
+          <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(3, 1fr)' } }}>
             <Cifra titulo={t('panel.clasificacionesTotal')} valor={datos.clasificaciones.total} testid="cifra-clasificaciones" />
             <Cifra titulo={t('panel.clasificaciones7')} valor={datos.clasificaciones.ultimos7Dias} testid="cifra-7dias" />
+            <Cifra titulo={t('panel.modelosUsados')} valor={Object.keys(datos.clasificaciones.porModelo).length} testid="cifra-modelos" />
           </Box>
           <ColumnasPorDia titulo={t('panel.clasifPorDia')} dias={datos.clasificaciones.porDia} />
           <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
-            <Barras titulo={t('panel.lotesPorVariedad')} filas={porVariedad(datos.lotes.porVariedad)} columna={t('campos.categoria')} testid="grafica-lotes" />
             <Barras titulo={t('panel.clasifPorVariedad')} filas={porVariedad(datos.clasificaciones.porVariedad)} columna={t('campos.categoria')} testid="grafica-variedades" />
+            {Object.keys(datos.clasificaciones.porModelo).length > 0 ? (
+              <Barras titulo={t('panel.porModelo')} columna={t('clasificador.col.modelo')} testid="grafica-modelos"
+                filas={Object.entries(datos.clasificaciones.porModelo).map(([m, v]) => ({ etiqueta: nombreModelo(m), valor: v }))} />
+            ) : (
+              <Alert severity="info" data-testid="sin-clasificaciones">{t('panel.sinClasificaciones')}</Alert>
+            )}
           </Box>
-          {Object.keys(datos.clasificaciones.porModelo).length > 0 ? (
-            <Barras titulo={t('panel.porModelo')} columna={t('clasificador.col.modelo')} testid="grafica-modelos"
-              filas={Object.entries(datos.clasificaciones.porModelo).map(([m, v]) => ({ etiqueta: nombreModelo(m), valor: v }))} />
-          ) : (
-            <Alert severity="info" data-testid="sin-clasificaciones">{t('panel.sinClasificaciones')}</Alert>
-          )}
         </>
       )}
     </Stack>

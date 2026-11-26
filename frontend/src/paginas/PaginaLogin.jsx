@@ -1,10 +1,10 @@
 /**
  * @file PaginaLogin.jsx
- * @description Acceso del equipo con Formik y Yup (HU-01). No envía la petición si hay campos
+ * @description Acceso del administrador con Formik y Yup (HU-01). No envía la petición si hay campos
  *              vacíos (CA-01.5) y muestra el mensaje de la API si las credenciales fallan. Explica
  *              que para clasificar no hace falta cuenta y permite volver a la página pública.
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-21
+ * @actualizacion 2026-11-26
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * @version 1.1.0
  */
@@ -33,14 +33,14 @@ export default function PaginaLogin() {
       setErrorApi('');
       try {
         await entrar({ username: valores.username.trim(), password: valores.password });
-        navegar(ubicacion.state?.desde || '/equipo/lotes', { replace: true });
+        navegar(ubicacion.state?.desde || '/equipo/panel', { replace: true });
       } catch (e) {
         setErrorApi(mensajeError(e, t));
       }
     },
   });
 
-  if (sesion) return <Navigate to="/equipo/lotes" replace />;
+  if (sesion) return <Navigate to="/equipo/panel" replace />;
 
   const campo = (nombre) => ({
     id: nombre,

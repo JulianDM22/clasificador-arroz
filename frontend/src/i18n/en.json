@@ -6,18 +6,15 @@
   "menu": {
     "navegacion": "Main navigation",
     "clasificar": "Classify",
-    "lotes": "Batches",
-    "panel": "Dashboard",
-    "equipo": "Team access",
-    "cerrarSesion": "Sign out",
+    "proyecto": "How it was built",
+    "repositorio": "See the code on GitHub",
     "idioma": "Switch language to Spanish",
     "temaOscuro": "Switch to dark theme",
     "temaClaro": "Switch to light theme",
-    "usuario": "{{usuario}} · {{rol}}"
-  },
-  "roles": {
-    "ADMIN": "Administrator",
-    "USUARIO": "Operator"
+    "panel": "Dashboard",
+    "cerrarSesion": "Sign out",
+    "usuario": "{{usuario}} · {{rol}}",
+    "equipo": "Admin access"
   },
   "inicio": {
     "titulo": "Which rice variety is it?",
@@ -49,7 +46,6 @@
     "tuFoto": "Your photo",
     "analizadoCon": "Analyzed with {{modelo}} in {{segundos}} s.",
     "otraFoto": "Classify another photo",
-    "registrarLote": "Register as a batch",
     "detalle": "See the probability of each variety",
     "avanzadas": "Advanced options: choose the model or compare all 5",
     "avanzadasTexto": "The project trained 5 artificial intelligence models. The most accurate one is used by default; here you can choose another one or compare all 5 on the same photo.",
@@ -58,10 +54,9 @@
     "ensamble": "All 5 together (weighted vote)",
     "comparar": "Compare the 5 models on this photo",
     "comparando": "Comparing the 5 models…",
-    "comoFunciona": "How does it work?",
-    "comoFuncionaTexto": "The models were trained with grain photos from the Rice Image Dataset (Koklu et al., 75,000 images) and evaluated on 11,206 photos they never saw during training: all of them are more than 99% accurate. Your photo is not stored; it is only used to classify it.",
     "pie": "Artificial Intelligence course project · Julian Delgado and Cesar Camilo Hoyos Diaz",
-    "activando": "Starting the classification service: the free server sleeps when nobody uses it and takes up to a minute to wake up. You can choose your photo meanwhile."
+    "activando": "Starting the classification service: the free server sleeps when nobody uses it and takes up to a minute to wake up. You can choose your photo meanwhile.",
+    "etiqueta": "Artificial intelligence · Computer vision"
   },
   "variedades": {
     "ARBORIO": "Italian short, rounded grain variety with a lot of starch. It is the typical rice for risotto.",
@@ -92,39 +87,98 @@
       "peso": "Vote weight"
     }
   },
+  "categorias": {
+    "ARBORIO": "Arborio",
+    "BASMATI": "Basmati",
+    "IPSALA": "Ipsala",
+    "JASMINE": "Jasmine",
+    "KARACADAG": "Karacadag"
+  },
+  "validacion": {
+    "archivoTipo": "The photo must be JPEG or PNG",
+    "archivoTamano": "The photo cannot exceed 5 MB",
+    "usuarioObligatorio": "Username is required",
+    "contrasenaObligatoria": "Password is required"
+  },
+  "errores": {
+    "red": "Could not connect to the server. Check your connection and try again.",
+    "generico": "An unexpected error occurred.",
+    "sesionVencida": "Your session expired. Please sign in again."
+  },
+  "noEncontrada": {
+    "titulo": "Page not found",
+    "volver": "Go home"
+  },
+  "proyecto": {
+    "titulo": "How it was built",
+    "intro": "The models on this page are the result of the project's 6 artificial intelligence topics. Each card sums up what was done and its main result, measured on photos the models never saw during training.",
+    "tema": "Topic {{n}}",
+    "codigo": "See the code and notebooks",
+    "t1": {
+      "titulo": "Dataset preparation",
+      "dato": "74,703 photos",
+      "etiqueta": "after removing 297 duplicates",
+      "texto": "70/15/15 split without data leakage (train 52,292 · validation 11,205 · test 11,206), saved as CSV for reproducibility. A generator that loads photos batch by batch and a conditional GAN that generates grains per variety."
+    },
+    "t2": {
+      "titulo": "Hyperparameter tuning",
+      "dato": "23 configurations",
+      "etiqueta": "tried by Hyperband",
+      "texto": "Hyperband searched the model, learning rate, batch size, dropout and epochs, dropping early whatever did not look promising. The pretrained models needed very low learning rates, around 0.00001."
+    },
+    "t3": {
+      "titulo": "Cross-validation",
+      "dato": "99.78% ± 0.22",
+      "etiqueta": "ResNet50V2 in stratified k-fold (k = 5)",
+      "texto": "K-fold, stratified k-fold, hold-out and Monte Carlo were compared. Leave-one-out, leave-p-out and time series were ruled out with a justification. Cross-validation revealed that EfficientNet was unstable."
+    },
+    "t4": {
+      "titulo": "CNNs and transformers",
+      "dato": "99.91%",
+      "etiqueta": "ResNet50V2 on 11,206 test photos",
+      "texto": "3 CNNs (custom, EfficientNetB0, ResNet50V2) and 2 transformers (ViT-B/16, DeiT-S), all above 99%. On this dataset the transformers did not beat the CNNs."
+    },
+    "t5": {
+      "titulo": "Ensembles",
+      "dato": "99.93%",
+      "etiqueta": "heterogeneous, all 5 models",
+      "texto": "Homogeneous (3 CNNs), heterogeneous (all 5) and hybrid (stacking). The best one fixes 2 photos compared with ResNet50V2, but McNemar's test shows it is not significant (p = 0.5)."
+    },
+    "t6": {
+      "titulo": "Distributed and federated learning",
+      "dato": "1.66×",
+      "etiqueta": "faster with 2 GPUs",
+      "texto": "Distributed training on 2 GPUs with MirroredStrategy. With FedAvg and 5 clients, the federated model reached 98.1% (IID case) without any client sharing its photos."
+    }
+  },
   "login": {
-    "titulo": "Team access",
-    "explicacion": "Only for the team that manages the batch inventory. You do not need an account to classify photos.",
+    "titulo": "Administrator access",
+    "explicacion": "Only to see the models' usage statistics. You do not need an account to classify photos.",
     "usuario": "Username",
     "contrasena": "Password",
     "entrar": "Sign in",
     "volver": "Back to classifying"
   },
-  "productos": {
-    "titulo": "Rice batches",
-    "rolUSUARIO": "As an operator you can register and edit batches. Activating, deactivating and deleting batches is the administrator's job.",
-    "rolADMIN": "As an administrator you can also activate or deactivate batches and delete them.",
-    "nuevo": "New batch",
-    "buscar": "Search by name",
-    "todas": "All",
-    "todos": "All",
-    "vacio": "No batches match the filters.",
-    "editar": "Edit {{nombre}}",
-    "eliminar": "Delete {{nombre}}",
-    "cambiarEstado": "Batch {{nombre}} active",
-    "activado": "Batch activated",
-    "desactivado": "Batch deactivated",
-    "filasPorPagina": "Rows per page",
-    "rango": "{{desde}}–{{hasta}} of {{total}}",
-    "eliminado": "Batch deleted",
-    "guardado": "Batch saved",
-    "confirmarTitulo": "Delete batch?",
-    "confirmarTexto": "“{{nombre}}” will be deleted. This cannot be undone. If you only want to take it out of the inventory, deactivate it.",
-    "cancelar": "Cancel",
-    "confirmarEliminar": "Delete",
-    "cargando": "Loading batches",
-    "activar": "Activate {{nombre}}",
-    "desactivar": "Deactivate {{nombre}}"
+  "panel": {
+    "titulo": "Administrator dashboard",
+    "explicacion": "Usage of the models from the public page: how many photos are classified, which varieties come out and which models are used.",
+    "actualizar": "Refresh",
+    "cargando": "Loading statistics",
+    "clasificacionesTotal": "Classifications made",
+    "clasificaciones7": "In the last 7 days",
+    "clasifPorDia": "Classifications per day (last 14 days)",
+    "clasifPorVariedad": "Suggested variety in classifications",
+    "porModelo": "Most used models",
+    "sinClasificaciones": "There are no classifications yet.",
+    "verTabla": "See the data as a table",
+    "dia": "Day",
+    "cantidad": "Count",
+    "comparacion": "Comparison of the 5",
+    "modelosUsados": "Models used"
+  },
+  "roles": {
+    "ADMIN": "Administrator",
+    "USUARIO": "Operator"
   },
   "campos": {
     "id": "Id",
@@ -133,67 +187,5 @@
     "descripcion": "Description",
     "estado": "Status",
     "acciones": "Actions"
-  },
-  "categorias": {
-    "ARBORIO": "Arborio",
-    "BASMATI": "Basmati",
-    "IPSALA": "Ipsala",
-    "JASMINE": "Jasmine",
-    "KARACADAG": "Karacadag"
-  },
-  "estados": {
-    "ACTIVO": "Active",
-    "INACTIVO": "Inactive"
-  },
-  "formulario": {
-    "tituloNuevo": "New batch",
-    "tituloEditar": "Edit batch",
-    "guardar": "Save",
-    "volver": "Back to batches",
-    "caracteres": "{{n}} / {{max}} characters",
-    "sugerida": "Variety suggested by the photo: {{variedad}} ({{confianza}} confidence). You can change it if it does not match.",
-    "sinSaber": "Not sure about the variety? Classify a photo of the grain",
-    "nuevoActivo": "The batch is active once saved."
-  },
-  "panel": {
-    "titulo": "Administrator dashboard",
-    "explicacion": "Summary of the inventory and of the public classifier usage.",
-    "actualizar": "Refresh",
-    "cargando": "Loading statistics",
-    "lotes": "Batches",
-    "lotesTotal": "Registered batches",
-    "lotesActivos": "Active",
-    "lotesInactivos": "Inactive",
-    "clasificacionesTotal": "Classifications made",
-    "clasificaciones7": "In the last 7 days",
-    "lotesPorVariedad": "Batches by variety",
-    "clasifPorDia": "Classifications per day (last 14 days)",
-    "clasifPorVariedad": "Suggested variety in classifications",
-    "porModelo": "Most used models",
-    "sinClasificaciones": "There are no classifications yet.",
-    "verTabla": "See the data as a table",
-    "dia": "Day",
-    "cantidad": "Count",
-    "comparacion": "Comparison of the 5"
-  },
-  "validacion": {
-    "nombreObligatorio": "Name is required",
-    "nombreMin": "Name must have at least {{min}} characters",
-    "nombreMax": "Name cannot exceed {{max}} characters",
-    "categoriaObligatoria": "Select a variety",
-    "descripcionMax": "Description cannot exceed {{max}} characters",
-    "usuarioObligatorio": "Username is required",
-    "contrasenaObligatoria": "Password is required",
-    "archivoTipo": "The photo must be JPEG or PNG",
-    "archivoTamano": "The photo cannot exceed 5 MB"
-  },
-  "errores": {
-    "red": "Could not connect to the server. Check your connection and try again.",
-    "sesionVencida": "Your session expired. Please sign in again.",
-    "generico": "An unexpected error occurred."
-  },
-  "noEncontrada": {
-    "titulo": "Page not found",
-    "volver": "Go home"
   }
 }

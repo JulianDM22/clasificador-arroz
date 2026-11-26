@@ -3,7 +3,7 @@
  * @description Construye el tema de Material UI a partir de los tokens de diseño, para modo
  *              claro u oscuro.
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-18
+ * @actualizacion 2026-11-26
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
  * @version 1.0.0
  */
@@ -36,6 +36,8 @@ export function crearTema(modo) {
       MuiButton: { defaultProps: { disableElevation: true }, styleOverrides: { root: { textTransform: 'none', fontWeight: 600 } } },
       MuiTextField: { defaultProps: { fullWidth: true } },
       MuiToggleButton: { styleOverrides: { root: { textTransform: 'none', fontWeight: 600, whiteSpace: 'nowrap' } } },
+      // Fondo sólido de alto contraste: el gris semitransparente por defecto no pasa WCAG AA.
+      MuiTooltip: { styleOverrides: { tooltip: { backgroundColor: c.texto, color: c.superficie, fontSize: '0.8rem' } } },
     },
   });
 }

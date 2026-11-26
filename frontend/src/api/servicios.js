@@ -1,23 +1,14 @@
 /**
  * @file servicios.js
- * @description Funciones de acceso a la API: autenticación, CRUD de lotes (productos), cambio
- *              de estado y estadísticas (solo ADMIN) y clasificación pública. Intercambian JSON,
- *              salvo la clasificación, que envía la foto como multipart.
+ * @description Funciones de acceso a la API: clasificación pública (una foto con un modelo, o
+ *              los 5 modelos a la vez), catálogo de modelos, inicio de sesión del administrador y
+ *              estadísticas de uso. La foto viaja como multipart; lo demás, como JSON.
  * @fecha_creacion 2026-10-18
- * @actualizacion 2026-10-21
+ * @actualizacion 2026-11-26
  * @autor Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
- * @version 1.1.0
+ * @version 2.0.0
  */
 import cliente from './cliente';
-
-/**
- * @typedef {Object} Producto
- * @property {number} [id]
- * @property {string} nombre
- * @property {'ARBORIO'|'BASMATI'|'IPSALA'|'JASMINE'|'KARACADAG'} categoria
- * @property {string} [descripcion]
- * @property {'ACTIVO'|'INACTIVO'} [estado] lo asigna la API: los lotes nuevos quedan ACTIVOS
- */
 
 /**
  * Inicia sesión.
@@ -27,44 +18,8 @@ import cliente from './cliente';
 export const iniciarSesion = (credenciales) => cliente.post('/auth/login', credenciales).then((r) => r.data);
 
 /**
- * Lista productos con filtros y paginación.
- * @param {Object} filtros
- * @param {string} [filtros.categoria] variedad
- * @param {string} [filtros.estado] estado
- * @param {string} [filtros.q] texto contenido en el nombre
- * @param {number} [filtros.page] página desde 0
- * @param {number} [filtros.size] tamaño de página
- * @returns {Promise<{content: Producto[], totalElements: number, page: number, size: number}>}
- */
-export const listarProductos = (filtros) => {
-  const params = Object.fromEntries(Object.entries(filtros).filter(([, v]) => v !== '' && v != null));
-  return cliente.get('/productos', { params }).then((r) => r.data);
-};
-
-/** @param {number} id @returns {Promise<Producto>} */
-export const obtenerProducto = (id) => cliente.get(`/productos/${id}`).then((r) => r.data);
-
-/** @param {Producto} producto @returns {Promise<Producto>} */
-export const crearProducto = (producto) => cliente.post('/productos', producto).then((r) => r.data);
-
-/** @param {number} id @param {Producto} producto @returns {Promise<Producto>} */
-export const actualizarProducto = (id, producto) => cliente.put(`/productos/${id}`, producto).then((r) => r.data);
-
-/** @param {number} id @returns {Promise<void>} */
-export const eliminarProducto = (id) => cliente.delete(`/productos/${id}`).then(() => undefined);
-
-/**
- * Activa o desactiva un lote (solo ADMIN).
- * @param {number} id
- * @param {'ACTIVO'|'INACTIVO'} estado
- * @returns {Promise<Producto>}
- */
-export const cambiarEstadoProducto = (id, estado) => cliente.patch(`/productos/${id}/estado`, { estado }).then((r) => r.data);
-
-/**
  * Estadísticas del panel (solo ADMIN).
- * @returns {Promise<{lotes: {total: number, activos: number, inactivos: number, porVariedad: Object<string, number>},
- *   clasificaciones: {total: number, ultimos7Dias: number, porVariedad: Object<string, number>,
+ * @returns {Promise<{clasificaciones: {total: number, ultimos7Dias: number, porVariedad: Object<string, number>,
  *   porModelo: Object<string, number>, porDia: {fecha: string, cantidad: number}[]}}>}
  */
 export const obtenerEstadisticas = () => cliente.get('/estadisticas').then((r) => r.data);
