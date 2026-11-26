@@ -1,140 +1,94 @@
 <!--
 Nombre: README.md
-Descripción: Presentación del proyecto, arquitectura y cómo ejecutar, probar y desplegar.
+Descripción: Qué hace el proyecto, qué hay en cada notebook, resultados, arquitectura,
+             tecnologías y cómo ejecutarlo.
 Fecha de creación: 2026-10-18
-Última actualización: 2026-10-21
+Última actualización: 2026-11-26
 Autores: Julian Delgado (@JulianDM22), Cesar Camilo Hoyos Diaz (@Camilo1408)
-Versión: 1.2.0
+Versión: 2.0.0
 -->
 
 # Clasificador de variedades de arroz
 
-**Aplicación en línea:** https://arroz-frontend.onrender.com (plan gratuito: la primera visita
-puede tardar cerca de un minuto mientras los servicios despiertan).
+Proyecto de **Inteligencia Artificial**: modelos de visión por computador que reconocen 5 variedades
+de arroz (Arborio, Basmati, Ipsala, Jasmine, Karacadag) a partir de la foto de un grano, entrenados
+con el [Rice Image Dataset](https://www.muratkoklu.com/datasets/) (75.000 fotos).
 
-Proyecto de la materia **Inteligencia Artificial**. Clasifica fotos de granos en 5 variedades
-(Arborio, Basmati, Ipsala, Jasmine, Karacadag) con modelos entrenados sobre el
-[Rice Image Dataset](https://www.muratkoklu.com/datasets/) (75.000 imágenes).
+**Aplicación:** https://arroz-frontend.onrender.com. Plan gratuito: la primera visita puede tardar
+cerca de un minuto mientras el servidor despierta.
 
-**Cómo se usa la página:**
-- **Cualquier persona**, sin cuenta, entra, sube la foto de un grano (o prueba con una de las
-  fotos de ejemplo) y ve la variedad, qué tan seguro está el modelo y una descripción de la
-  variedad. En las opciones avanzadas puede elegir el modelo o comparar los 5.
-- **El equipo** entra por "Acceso del equipo" al inventario de lotes de arroz:
-  - el **operario** registra y edita lotes, y puede guardar como lote lo que acaba de clasificar;
-  - el **administrador** además activa o desactiva lotes, los elimina y tiene un **panel** con
-    las estadísticas del inventario y del uso del clasificador.
+![Página principal](docs/imagenes/pagina_publica.png)
 
-![Página pública](docs/imagenes/pagina_publica.png)
+## Notebooks (Kaggle, Keras)
 
-![Resultado de una foto de ejemplo](docs/imagenes/resultado_clasificacion.png)
+| Notebook | Tema | Qué hace |
+|---|---|---|
+| `01_preparacion_datos` | 1 | Quita 297 duplicados, partición estratificada 70/15/15 sin fuga, CSV reproducibles, generador por lotes |
+| `02_hyperband` | 2 | Busca modelo, tasa de aprendizaje, lote, dropout y épocas con Hyperband |
+| `03_validacion_cruzada` | 3 | K-fold estratificado con los 5 modelos; compara k-fold, hold-out y Monte Carlo |
+| `04_entrenamiento_final` | 4 y 6 | Entrena los 5 modelos con todos los datos, evalúa en test y mide 1 frente a 2 GPU |
+| `05_ensambles` | 5 | Ensambles homogéneo, heterogéneo e híbrido, con prueba de McNemar |
+| `06_gan` | 1 | GAN condicional que genera granos por variedad y prueba si sirven para aumentar datos |
+| `07_federado` | 6 | FedAvg con 5 clientes, casos IID y no IID |
+| `08_exportar_modelos` | — | Exporta los 5 modelos a TensorFlow Lite y los verifica contra el original |
+
+Las salidas de cada notebook están en su versión guardada en Kaggle; los archivos de este
+repositorio no las incluyen.
+
+## Resultados en test (11.206 fotos que los modelos no vieron)
+
+| Modelo | Tipo | Test | Validación cruzada (k = 5) |
+|---|---|---|---|
+| **ResNet50V2** (por defecto en la app) | CNN | **99,91 %** | 99,78 % ± 0,22 |
+| EfficientNetB0 | CNN | 99,87 % | 90,83 % ± 10,79 |
+| ViT-B/16 | Transformer | 99,80 % | 99,56 % ± 0,49 |
+| DeiT-S | Transformer | 99,56 % | 98,53 % ± 0,72 |
+| CNN propia | CNN | 99,08 % | 91,21 % ± 8,97 |
+
+El mejor ensamble (heterogéneo) llega a 99,93 %, pero según McNemar la mejora no es significativa
+(p = 0,5). Las cifras son altas porque el dataset es de laboratorio: un grano centrado sobre fondo
+negro uniforme. Con fotos tomadas con celular se espera menos exactitud.
 
 ## Arquitectura
 
 ```
-React + Material UI ──JSON──► Spring Boot (API REST, JWT) ──► PostgreSQL
-    (frontend/)                    (backend/)          (lotes, usuarios y registro de clasificaciones)
-                                       │ foto (multipart, clave X-API-Key)
-                                       ▼
-                     FastAPI + los 5 modelos en TensorFlow Lite
-                                  (inferencia/)
+Navegador ── React (frontend/) ──► API Spring Boot (backend/) ──► PostgreSQL
+                                          │                         (usuarios y registro de clasificaciones)
+                                          │ foto + clave X-API-Key
+                                          ▼
+                              FastAPI + 5 modelos TensorFlow Lite (inferencia/)
 ```
 
-| Carpeta | Contenido |
-|---|---|
-| `notebooks/` | Temas 1 a 6 de IA (Kaggle): preparación de datos, Hyperband, validación cruzada, 5 modelos (3 CNN y 2 transformers), ensambles, GAN, aprendizaje federado y distribuido, exportación del modelo |
-| `backend/` | API REST: clasificación pública con límite por IP, CRUD de lotes, roles, estadísticas, autenticación JWT, i18n, OpenAPI, Flyway |
-| `inferencia/` | Servicio que clasifica la foto con los 5 modelos y el ensamble |
-| `frontend/` | Interfaz web: página pública de clasificación, inventario de lotes, panel del administrador, temas, i18n, accesibilidad |
-| `pruebas/carga/` | Pruebas de carga, estrés y pico con k6 |
-| `db/` | Scripts de creación e inicialización de la base de datos |
-| `monitoreo/` | Prometheus, alertas y tablero de Grafana |
-| `scripts/` | Gestión del repositorio, compilación y pruebas, listado de casos de prueba |
-| `docs/` | Criterios de aceptación, casos de prueba, métricas y despliegue |
+- **Página pública:** clasificar una foto, comparar los 5 modelos y ver cómo se construyó el proyecto.
+- **Panel del administrador:** clasificaciones por día, por variedad y por modelo.
 
-## Resultados del modelo
+## Tecnologías y por qué
 
-| Modelo | Validación cruzada (k = 5) | Test |
+| Parte | Tecnología | Por qué |
 |---|---|---|
-| **ResNet50V2** (el de la web) | **99,78 % ± 0,22** | **99,91 %** |
-| ViT-B/16 | 99,56 % ± 0,49 | 99,80 % |
-| EfficientNetB0 | 90,83 % ± 10,79 | 99,87 % |
-| DeiT-S | 98,53 % ± 0,72 | 99,56 % |
-| CNN propia | 91,21 % ± 8,97 | 99,08 % |
+| Entrenamiento | Kaggle Notebooks (2 GPU T4) | El dataset ya está en Kaggle y las 2 GPU permiten el tema 6 |
+| Modelos | Keras 3 / TensorFlow, KerasTuner, keras-hub | Una sola librería para los 6 temas y los 5 modelos preentrenados |
+| Servir modelos | TensorFlow Lite (LiteRT) + FastAPI | Liviano: los 5 modelos caben en 512 MB (283 MB en uso) |
+| API | Spring Boot + PostgreSQL | Registro de clasificaciones, acceso del administrador y límite de 20 fotos por minuto por IP |
+| Interfaz | React + Material UI | Español e inglés, tema claro y oscuro, accesible y adaptable a celular |
+| Calidad y despliegue | Docker, GitHub Actions, Render | Cada cambio se prueba y, si todo pasa, se publica solo |
 
-Los ensambles (homogéneo, heterogéneo e híbrido) llegan a 99,93 %, pero la mejora frente a
-ResNet50V2 solo no es significativa (prueba de McNemar).
-
-En la aplicación están los **5 modelos**: por defecto se usa ResNet50V2, el más preciso, y en las
-opciones avanzadas se puede elegir otro, usar los 5 juntos (ensamble) o **comparar los 5** con la
-misma foto para ver la predicción, la confianza y el tiempo de cada uno, junto con sus métricas
-de test.
-
-![Comparación de los 5 modelos con una foto de test de Jasmine](docs/imagenes/comparacion_modelos.png)
-
-Los modelos van en TensorFlow Lite (notebook 08). Cada uno se verificó contra su original en
-500 fotos de test: coinciden en el 100 % de las predicciones.
-
-| Modelo | Formato | Tamaño | Tiempo por foto (CPU, contenedor) |
-|---|---|---|---|
-| CNN propia | float16 | 0,8 MB | ~28 ms |
-| EfficientNetB0 | float16 | 8,1 MB | ~26 ms |
-| ResNet50V2 | int8 | 24,1 MB | ~145 ms |
-| ViT-B/16 | int8 | 87,8 MB | ~670–740 ms |
-| DeiT-S | int8 | 22,8 MB | ~190–280 ms |
-
-Los 3 modelos grandes van en int8 para que el servicio quepa en los 512 MB del plan gratuito:
-con los 5 cargados usa ~283 MB (con float16 llegaba a ~500 MB).
-
-## Ejecutar
+## Ejecutar en local
 
 ```bash
 docker compose up -d --build --wait
 ```
 
-Abrir http://localhost:8081. Para el área del equipo ("Acceso del equipo"), los usuarios de
-desarrollo son `admin` / `Admin123*` y `operario` / `Operario123*` (en producción se usan otras
-contraseñas, definidas en Render).
-Documentación de la API: http://localhost:8080/swagger-ui.html.
+Abrir http://localhost:8081. Usuario administrador de desarrollo: `admin` / `Admin123*` (en
+producción la contraseña es otra). Fotos de prueba: `inferencia/tests/muestras/`.
 
-## Probar
+## Dataset
 
-```powershell
-.\scripts\compilar_y_probar.ps1            # back-end, mutación, inferencia y front-end
-.\scripts\compilar_y_probar.ps1 -Sistema   # además Playwright, Selenium y k6 sobre docker compose
-```
-
-La lista completa de casos de prueba y su relación con los criterios de aceptación está en
-[`docs/casos_de_prueba.md`](docs/casos_de_prueba.md); se regenera con
-`python scripts/listar_casos_prueba.py`.
-
-## Documentación
-
-- [Criterios de aceptación](docs/criterios_aceptacion.md)
-- [Casos de prueba y trazabilidad](docs/casos_de_prueba.md)
-- [Métricas, desempeño del equipo y monitoreo](docs/metricas.md)
-- [Despliegue](docs/despliegue.md)
-- JavaDoc: `cd backend && mvn javadoc:javadoc` → `backend/target/reports/apidocs`
-- JSDoc: `cd frontend && npm run docs` → `frontend/docs-js`
-
-## Dataset y cita
-
-Se usa el **Rice Image Dataset** de Murat Koklu (https://www.muratkoklu.com/datasets/), publicado
-también en Kaggle. Las imágenes no se incluyen en este repositorio. Los autores piden citar:
-
-- Koklu, M., Cinar, I., & Taspinar, Y. S. (2021). Classification of rice varieties with deep
-  learning methods. *Computers and Electronics in Agriculture, 187*, 106285.
-  https://doi.org/10.1016/j.compag.2021.106285
-- Cinar, I., & Koklu, M. (2021). Determination of Effective and Specific Physical Features of Rice
-  Varieties by Computer Vision In Exterior Quality Inspection. *Selcuk Journal of Agriculture and
-  Food Sciences, 35*(3), 229–243. https://doi.org/10.15316/SJAFS.2021.252
-- Cinar, I., & Koklu, M. (2022). Identification of Rice Varieties Using Machine Learning
-  Algorithms. *Journal of Agricultural Sciences*. https://doi.org/10.15832/ankutbd.862482
-- Cinar, I., & Koklu, M. (2019). Classification of Rice Varieties Using Artificial Intelligence
-  Methods. *International Journal of Intelligent Systems and Applications in Engineering, 7*(3),
-  188–194. https://doi.org/10.18201/ijisae.2019355381
+Koklu, M., Cinar, I., & Taspinar, Y. S. (2021). Classification of rice varieties with deep learning
+methods. *Computers and Electronics in Agriculture, 187*, 106285.
+https://doi.org/10.1016/j.compag.2021.106285. Las imágenes no se incluyen en este repositorio.
 
 ## Equipo
 
-- Julian Delgado ([@JulianDM22](https://github.com/JulianDM22))
-- Camilo ([@Camilo1408](https://github.com/Camilo1408))
+Julian Delgado ([@JulianDM22](https://github.com/JulianDM22)) y Cesar Camilo Hoyos Diaz
+([@Camilo1408](https://github.com/Camilo1408)).
